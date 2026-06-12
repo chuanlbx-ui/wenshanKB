@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文山知识库 · 知识图谱</title>
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#1a1a2e; color:#e0e0e0; font-family:'Segoe UI','Microsoft YaHei',sans-serif;
+  overflow:hidden; height:100vh; width:100vw;
+}
+#graph { position:absolute; top:0; left:0; width:100%; height:100%; }
+svg { width:100%; height:100%; }
+
+/* Legend */
+#legend {
+  position:absolute; top:16px; left:16px;
+  background:rgba(22,22,54,0.92); border:1px solid rgba(255,255,255,0.12);
+  border-radius:10px; padding:14px 16px; z-index:10;
+  backdrop-filter:blur(8px); max-height:70vh; overflow-y:auto;
+}
+#legend h3 { font-size:14px; margin-bottom:10px; color:#a0a0d0; letter-spacing:1px; }
+.legend-item { display:flex; align-items:center; margin:4px 0; font-size:12px; }
+.legend-dot { width:10px; height:10px; border-radius:50%; margin-right:8px; flex-shrink:0; }
+
+/* Search */
+#search-box {
+  position:absolute; top:16px; right:16px; z-index:10;
+  background:rgba(22,22,54,0.92); border:1px solid rgba(255,255,255,0.15);
+  border-radius:10px; padding:10px 14px; backdrop-filter:blur(8px);
+}
+#search-box input {
+  background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.2);
+  border-radius:6px; color:#e0e0e0; padding:8px 12px; font-size:13px;
+  width:200px; outline:none; transition:border 0.2s;
+}
+#search-box input:focus { border-color:#6c63ff; }
+#search-results { margin-top:6px; font-size:11px; color:#888; }
+
+/* Detail Panel */
+#detail {
+  position:absolute; bottom:60px; right:16px; z-index:10;
+  background:rgba(22,22,54,0.94); border:1px solid rgba(255,255,255,0.15);
+  border-radius:12px; padding:18px 20px; width:280px; backdrop-filter:blur(10px);
+  display:none; max-height:50vh; overflow-y:auto;
+}
+#detail h4 { font-size:15px; color:#c0c0ff; margin-bottom:10px; word-break:break-all; }
+#detail .field { margin:6px 0; font-size:12px; }
+#detail .field .key { color:#888; }
+#detail .field .val { color:#e0e0e0; }
+#detail .tags { display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; }
+#detail .tag {
+  background:rgba(108,99,255,0.2); color:#b0b0ff;
+  padding:2px 8px; border-radius:10px; font-size:11px;
+}
+#detail .ref-list { margin-top:8px; max-height:120px; overflow-y:auto; }
+#detail .ref-item {
+  font-size:11px; color:#aaa; padding:2px 0; border-bottom:1px solid rgba(255,255,255,0.05);
+  cursor:pointer;
+}
+#detail .ref-item:hover { color:#6c63ff; }
+
+/* Stats Panel */
+#stats {
+  position:absolute; bottom:16px; left:50%; transform:translateX(-50%); z-index:10;
+  background:rgba(22,22,54,0.9); border:1px solid rgba(255,255,255,0.12);
+  border-radius:10px; padding:10px 24px; backdrop-filter:blur(8px);
+  display:flex; gap:32px; font-size:12px;
+}
+#stats .stat { text-align:center; }
+#stats .stat .num { font-size:18px; font-weight:700; color:#6c63ff; }
+#stats .stat .lbl { color:#888; margin-top:2px; }
+
+/* Tooltip */
+#tooltip {
+  position:absolute; pointer-events:none; z-index:20;
+  background:rgba(22,22,54,0.95); border:1px solid rgba(108,99,255,0.4);
+  border-radius:8px; padding:8px 12px; font-size:12px; display:none;
+}
+</style>
+</head>
+<body>
+
+<div id="graph"></div>
+
+<div id="legend">
+  <h3>分类图例</h3>
+  <div id="legend-items"></div>
+</div>
+
+<div id="search-box">
+  <input type="text" id="search-input" placeholder="搜索节点...">
+  <div id="search-results"></div>
+</div>
+
+<div id="detail">
+  <h4 id="detail-title"></h4>
+  <div class="field"><span class="key">分类：</span><span class="val" id="detail-cat"></span></div>
+  <div class="field"><span class="key">路径：</span><span class="val" id="detail-path"></span></div>
+  <div class="field"><span class="key">被引用：</span><span class="val" id="detail-indeg"></span></div>
+  <div class="tags" id="detail-tags"></div>
+  <div class="field" style="margin-top:8px;"><span class="key">引用列表：</span></div>
+  <div class="ref-list" id="detail-refs"></div>
+</div>
+
+<div id="stats">
+  <div class="stat"><div class="num" id="stat-nodes">0</div><div class="lbl">节点</div></div>
+  <div class="stat"><div class="num" id="stat-edges">0</div><div class="lbl">边</div></div>
+  <div class="stat"><div class="num" id="stat-avg">0</div><div class="lbl">平均度数</div></div>
+</div>
+
+<div id="tooltip"></div>
+
+<script src="https://d3js.org/d3.v7.min.js"></script>
+<script>
+// --- Color palette for categories ---
+const CAT_COLORS = {
+  '00-总览': '#ff6b6b',
+  '01-地理与自然环境': '#4ecdc4',
+  '01-总览': '#ff6b6b',
+  '02-历史沿革': '#a29bfe',
+  '03-行政区划': '#ffe66d',
+  '04-人口与民族': '#ff9ff3',
+  '05-经济发展': '#54a0ff',
+  '06-文化旅游': '#5f27cd',
+  '07-特产与资源': '#01a3a4',
+  '08-交通与基础设施': '#feca57',
+  '09-政策与治理': '#ff6348',
+  '10-社会民生': '#2ed573',
+  'root': '#7f8c8d',
+  'wiki': '#e056a0',
+  'wiki/entities': '#e056a0',
+  'wiki/topics': '#c44569'
+};
+
+const CAT_LABELS = {
+  '00-总览': '总览', '01-地理与自然环境': '地理', '01-总览': '总览',
+  '02-历史沿革': '历史', '03-行政区划': '区划', '04-人口与民族': '人口',
+  '05-经济发展': '经济', '06-文化旅游': '文旅', '07-特产与资源': '特产',
+  '08-交通与基础设施': '交通', '09-政策与治理': '政策', '10-社会民生': '民生',
+  'root': '根', 'wiki': 'Wiki', 'wiki/entities': '实体', 'wiki/topics': '主题'
+};
+
+// --- Load graph data ---
+const data = {"nodes":[{"id":0,"label":".wiki-schema","category":"root","path":".wiki-schema.md","tags":[],"in_degree":0},{"id":1,"label":"index","category":"root","path":"index.md","tags":[],"in_degree":0},{"id":2,"label":"log","category":"root","path":"log.md","tags":[],"in_degree":0},{"id":3,"label":"purpose","category":"root","path":"purpose.md","tags":[],"in_degree":0},{"id":4,"label":"文山州总览","category":"00-总览","path":"00-总览/文山州总览.md","tags":["总览","核心数据"],"in_degree":0},{"id":5,"label":"核心数据速查","category":"00-总览","path":"00-总览/核心数据速查.md","tags":["总览","数据","速查"],"in_degree":0},{"id":6,"label":"喀斯特地貌","category":"01-地理与自然环境","path":"01-地理与自然环境/喀斯特地貌.md","tags":["地理","喀斯特","旅游"],"in_degree":0},{"id":7,"label":"地理概况","category":"01-地理与自然环境","path":"01-地理与自然环境/地理概况.md","tags":["地理","自然环境"],"in_degree":0},{"id":8,"label":"气候特征","category":"01-地理与自然环境","path":"01-地理与自然环境/气候特征.md","tags":["地理","气候"],"in_degree":0},{"id":9,"label":"文山州概况","category":"01-总览","path":"01-总览/文山州概况.md","tags":["总览","数据"],"in_degree":0},{"id":10,"label":"历史沿革","category":"02-历史沿革","path":"02-历史沿革/历史沿革.md","tags":["历史"],"in_degree":0},{"id":11,"label":"革命老区与原战区","category":"02-历史沿革","path":"02-历史沿革/革命老区与原战区.md","tags":["历史","革命","军事"],"in_degree":0},{"id":12,"label":"丘北县深度","category":"03-行政区划","path":"03-行政区划/丘北县深度.md","tags":["行政区划","丘北县"],"in_degree":3},{"id":13,"label":"富宁县深度","category":"03-行政区划","path":"03-行政区划/富宁县深度.md","tags":["行政区划","富宁县","边境"],"in_degree":3},{"id":14,"label":"广南县深度","category":"03-行政区划","path":"03-行政区划/广南县深度.md","tags":["行政区划","广南县"],"in_degree":3},{"id":15,"label":"文山市深度","category":"03-行政区划","path":"03-行政区划/文山市深度.md","tags":["行政区划","文山市"],"in_degree":3},{"id":16,"label":"砚山县深度","category":"03-行政区划","path":"03-行政区划/砚山县深度.md","tags":["行政区划","砚山县"],"in_degree":3},{"id":17,"label":"行政区划总览","category":"03-行政区划","path":"03-行政区划/行政区划总览.md","tags":["行政区划"],"in_degree":0},{"id":18,"label":"西畴县深度","category":"03-行政区划","path":"03-行政区划/西畴县深度.md","tags":["行政区划","西畴县"],"in_degree":3},{"id":19,"label":"马关县深度","category":"03-行政区划","path":"03-行政区划/马关县深度.md","tags":["行政区划","马关县","边境"],"in_degree":3},{"id":20,"label":"麻栗坡县深度","category":"03-行政区划","path":"03-行政区划/麻栗坡县深度.md","tags":["行政区划","麻栗坡县","边境"],"in_degree":3},{"id":21,"label":"人口概况","category":"04-人口与民族","path":"04-人口与民族/人口概况.md","tags":["人口","民族"],"in_degree":0},{"id":22,"label":"历史名人","category":"04-人口与民族","path":"04-人口与民族/历史名人.md","tags":["人口","民族","名人","历史"],"in_degree":3},{"id":23,"label":"民族文化与节日","category":"04-人口与民族","path":"04-人口与民族/民族文化与节日.md","tags":["人口","民族","文化","节日"],"in_degree":1},{"id":24,"label":"民族构成","category":"04-人口与民族","path":"04-人口与民族/民族构成.md","tags":["人口","民族","文化"],"in_degree":0},{"id":25,"label":"非遗与传统文化","category":"04-人口与民族","path":"04-人口与民族/非遗与传统文化.md","tags":["人口","民族","非遗","文化"],"in_degree":4},{"id":26,"label":"三七产业","category":"05-经济发展","path":"05-经济发展/三七产业.md","tags":["经济","产业","三七","中药材"],"in_degree":0},{"id":27,"label":"农业农村与乡村振兴","category":"05-经济发展","path":"05-经济发展/农业农村与乡村振兴.md","tags":["经济","农业","乡村振兴","农村"],"in_degree":0},{"id":28,"label":"外贸发展","category":"05-经济发展","path":"05-经济发展/外贸发展.md","tags":["经济","外贸","口岸"],"in_degree":0},{"id":29,"label":"文山市经济深度","category":"05-经济发展","path":"05-经济发展/文山市经济深度.md","tags":["经济","文山市"],"in_degree":0},{"id":30,"label":"经济概况","category":"05-经济发展","path":"05-经济发展/经济概况.md","tags":["经济","数据","2025"],"in_degree":0},{"id":31,"label":"经济概况2025","category":"05-经济发展","path":"05-经济发展/经济概况2025.md","tags":["经济","数据","2025"],"in_degree":7},{"id":32,"label":"绿色铝产业","category":"05-经济发展","path":"05-经济发展/绿色铝产业.md","tags":["经济","铝产业","工业"],"in_degree":0},{"id":33,"label":"资源经济深度","category":"05-经济发展","path":"05-经济发展/资源经济深度.md","tags":["经济","资源"],"in_degree":0},{"id":34,"label":"高原特色农业","category":"05-经济发展","path":"05-经济发展/高原特色农业.md","tags":["经济","农业"],"in_degree":2},{"id":35,"label":"坝美","category":"06-文化旅游","path":"06-文化旅游/坝美.md","tags":["旅游","4A景区","喀斯特"],"in_degree":3},{"id":36,"label":"文山旅游总览","category":"06-文化旅游","path":"06-文化旅游/文山旅游总览.md","tags":["旅游","总览"],"in_degree":0},{"id":37,"label":"文旅深度报告","category":"06-文化旅游","path":"06-文化旅游/文旅深度报告.md","tags":["旅游","文化","文艺"],"in_degree":6},{"id":38,"label":"普者黑","category":"06-文化旅游","path":"06-文化旅游/普者黑.md","tags":["旅游","5A景区","喀斯特"],"in_degree":3},{"id":39,"label":"更多景点","category":"06-文化旅游","path":"06-文化旅游/更多景点.md","tags":["旅游","景点"],"in_degree":3},{"id":40,"label":"砚山康养","category":"06-文化旅游","path":"06-文化旅游/砚山康养.md","tags":["旅游","康养","中医药","砚山"],"in_degree":3},{"id":41,"label":"老山圣地","category":"06-文化旅游","path":"06-文化旅游/老山圣地.md","tags":["旅游","4A景区","红色旅游","军事"],"in_degree":3},{"id":42,"label":"三七","category":"07-特产与资源","path":"07-特产与资源/三七.md","tags":["特产","三七","中药材"],"in_degree":0},{"id":43,"label":"特色农产品","category":"07-特产与资源","path":"07-特产与资源/特色农产品.md","tags":["特产","农业"],"in_degree":0},{"id":44,"label":"矿产资源","category":"07-特产与资源","path":"07-特产与资源/矿产资源.md","tags":["资源","矿产"],"in_degree":0},{"id":45,"label":"能源资源","category":"07-特产与资源","path":"07-特产与资源/能源资源.md","tags":["资源","能源"],"in_degree":0},{"id":46,"label":"交通概况","category":"08-交通与基础设施","path":"08-交通与基础设施/交通概况.md","tags":["交通","基础设施"],"in_degree":0},{"id":47,"label":"口岸与边境通道","category":"08-交通与基础设施","path":"08-交通与基础设施/口岸与边境通道.md","tags":["交通","口岸","边境贸易"],"in_degree":0},{"id":48,"label":"在建项目","category":"08-交通与基础设施","path":"08-交通与基础设施/在建项目.md","tags":["交通","在建项目"],"in_degree":0},{"id":49,"label":"2024年政府工作报告精要","category":"09-政策与治理","path":"09-政策与治理/2024年政府工作报告精要.md","tags":["政策","政府工作报告","2025"],"in_degree":1},{"id":50,"label":"乡村振兴深度","category":"09-政策与治理","path":"09-政策与治理/乡村振兴深度.md","tags":["政策","乡村振兴"],"in_degree":2},{"id":51,"label":"十五五规划","category":"09-政策与治理","path":"09-政策与治理/十五五规划.md","tags":["政策","规划","十五五"],"in_degree":4},{"id":52,"label":"发展战略","category":"09-政策与治理","path":"09-政策与治理/发展战略.md","tags":["政策","战略"],"in_degree":0},{"id":53,"label":"口岸经济","category":"09-政策与治理","path":"09-政策与治理/口岸经济.md","tags":["政策","口岸","边境贸易"],"in_degree":2},{"id":54,"label":"生态文明建设报告","category":"09-政策与治理","path":"09-政策与治理/生态文明建设报告.md","tags":["政策","生态","环保"],"in_degree":5},{"id":55,"label":"乡村振兴与环境","category":"10-社会民生","path":"10-社会民生/乡村振兴与环境.md","tags":["民生","乡村振兴","生态"],"in_degree":1},{"id":56,"label":"医疗深度","category":"10-社会民生","path":"10-社会民生/医疗深度.md","tags":["民生","医疗"],"in_degree":2},{"id":57,"label":"卫生健康报告","category":"10-社会民生","path":"10-社会民生/卫生健康报告.md","tags":["民生","医疗","卫生"],"in_degree":2},{"id":58,"label":"教育医疗","category":"10-社会民生","path":"10-社会民生/教育医疗.md","tags":["民生","教育","医疗"],"in_degree":2},{"id":59,"label":"教育深度","category":"10-社会民生","path":"10-社会民生/教育深度.md","tags":["民生","教育"],"in_degree":5},{"id":60,"label":"教育深度报告","category":"10-社会民生","path":"10-社会民生/教育深度报告.md","tags":["民生","教育","体育"],"in_degree":5},{"id":61,"label":"文山市教育医疗","category":"10-社会民生","path":"10-社会民生/文山市教育医疗.md","tags":["民生","教育","医疗","文山市"],"in_degree":4},{"id":62,"label":"文旅体育深度","category":"10-社会民生","path":"10-社会民生/文旅体育深度.md","tags":["民生","文化","体育"],"in_degree":7},{"id":63,"label":"生态环境深度","category":"10-社会民生","path":"10-社会民生/生态环境深度.md","tags":["民生","生态","环保"],"in_degree":8},{"id":64,"label":"overview","category":"wiki","path":"wiki/overview.md","tags":["总览","知识库"],"in_degree":0},{"id":65,"label":"三七","category":"wiki/entities","path":"wiki/entities/三七.md","tags":["实体","产业","中药材","特产"],"in_degree":0},{"id":66,"label":"文山学院","category":"wiki/entities","path":"wiki/entities/文山学院.md","tags":["实体","教育","高校"],"in_degree":1},{"id":67,"label":"文山州","category":"wiki/entities","path":"wiki/entities/文山州.md","tags":["实体","地理","概述"],"in_degree":2},{"id":68,"label":"普者黑","category":"wiki/entities","path":"wiki/entities/普者黑.md","tags":["实体","旅游","5A景区","喀斯特"],"in_degree":3},{"id":69,"label":"绿色铝","category":"wiki/entities","path":"wiki/entities/绿色铝.md","tags":["实体","产业","铝工业"],"in_degree":4},{"id":70,"label":"产业转型与发展","category":"wiki/topics","path":"wiki/topics/产业转型与发展.md","tags":["主题","经济","产业"],"in_degree":0},{"id":71,"label":"口岸与边境贸易","category":"wiki/topics","path":"wiki/topics/口岸与边境贸易.md","tags":["主题","交通","口岸","边境贸易"],"in_degree":1},{"id":72,"label":"教育发展","category":"wiki/topics","path":"wiki/topics/教育发展.md","tags":["主题","民生","教育","医疗"],"in_degree":2},{"id":73,"label":"民族文化与旅游融合","category":"wiki/topics","path":"wiki/topics/民族文化与旅游融合.md","tags":["主题","旅游","文化","民族"],"in_degree":3}],"edges":[{"source":6,"target":12},{"source":6,"target":13},{"source":6,"target":14},{"source":6,"target":15},{"source":6,"target":16},{"source":6,"target":18},{"source":6,"target":19},{"source":6,"target":20},{"source":6,"target":35},{"source":6,"target":38},{"source":6,"target":39},{"source":6,"target":40},{"source":6,"target":41},{"source":7,"target":12},{"source":7,"target":13},{"source":7,"target":14},{"source":7,"target":15},{"source":7,"target":16},{"source":7,"target":18},{"source":7,"target":19},{"source":7,"target":20},{"source":7,"target":35},{"source":7,"target":38},{"source":7,"target":39},{"source":7,"target":40},{"source":7,"target":41},{"source":8,"target":12},{"source":8,"target":13},{"source":8,"target":14},{"source":8,"target":15},{"source":8,"target":16},{"source":8,"target":18},{"source":8,"target":19},{"source":8,"target":20},{"source":8,"target":35},{"source":8,"target":38},{"source":8,"target":39},{"source":8,"target":40},{"source":8,"target":41},{"source":21,"target":22},{"source":21,"target":23},{"source":21,"target":25},{"source":22,"target":25},{"source":23,"target":22},{"source":23,"target":25},{"source":24,"target":22},{"source":24,"target":25},{"source":26,"target":31},{"source":27,"target":31},{"source":28,"target":31},{"source":29,"target":31},{"source":30,"target":31},{"source":30,"target":34},{"source":31,"target":34},{"source":32,"target":31},{"source":33,"target":31},{"source":35,"target":37},{"source":36,"target":37},{"source":38,"target":37},{"source":39,"target":37},{"source":40,"target":37},{"source":41,"target":37},{"source":49,"target":50},{"source":49,"target":51},{"source":49,"target":53},{"source":49,"target":54},{"source":50,"target":51},{"source":50,"target":53},{"source":50,"target":54},{"source":51,"target":54},{"source":52,"target":49},{"source":52,"target":50},{"source":52,"target":51},{"source":52,"target":54},{"source":53,"target":51},{"source":53,"target":54},{"source":55,"target":56},{"source":55,"target":57},{"source":55,"target":59},{"source":55,"target":60},{"source":55,"target":61},{"source":55,"target":62},{"source":55,"target":63},{"source":56,"target":57},{"source":56,"target":58},{"source":56,"target":59},{"source":56,"target":60},{"source":56,"target":62},{"source":56,"target":63},{"source":57,"target":58},{"source":57,"target":59},{"source":57,"target":60},{"source":57,"target":61},{"source":57,"target":62},{"source":57,"target":63},{"source":58,"target":55},{"source":58,"target":59},{"source":58,"target":60},{"source":58,"target":61},{"source":58,"target":62},{"source":58,"target":63},{"source":59,"target":60},{"source":59,"target":62},{"source":59,"target":63},{"source":60,"target":61},{"source":60,"target":62},{"source":60,"target":63},{"source":61,"target":56},{"source":61,"target":59},{"source":61,"target":62},{"source":61,"target":63},{"source":62,"target":63},{"source":65,"target":66},{"source":65,"target":67},{"source":65,"target":68},{"source":65,"target":69},{"source":66,"target":67},{"source":66,"target":68},{"source":66,"target":69},{"source":67,"target":68},{"source":67,"target":69},{"source":68,"target":69},{"source":70,"target":71},{"source":70,"target":72},{"source":70,"target":73},{"source":71,"target":72},{"source":71,"target":73},{"source":72,"target":73}],"categories":["00-总览","01-地理与自然环境","01-总览","02-历史沿革","03-行政区划","04-人口与民族","05-经济发展","06-文化旅游","07-特产与资源","08-交通与基础设施","09-政策与治理","10-社会民生","root","wiki","wiki/entities","wiki/topics"],"stats":{"nodes":74,"edges":128,"avg_degree":3.5,"top10":[{"label":"生态环境深度","category":"10-社会民生","in_degree":8},{"label":"经济概况2025","category":"05-经济发展","in_degree":7},{"label":"文旅体育深度","category":"10-社会民生","in_degree":7},{"label":"文旅深度报告","category":"06-文化旅游","in_degree":6},{"label":"生态文明建设报告","category":"09-政策与治理","in_degree":5},{"label":"教育深度","category":"10-社会民生","in_degree":5},{"label":"教育深度报告","category":"10-社会民生","in_degree":5},{"label":"非遗与传统文化","category":"04-人口与民族","in_degree":4},{"label":"十五五规划","category":"09-政策与治理","in_degree":4},{"label":"文山市教育医疗","category":"10-社会民生","in_degree":4}]}};
+
+// --- Build legend ---
+const legendDiv = document.getElementById('legend-items');
+const uniqCats = [...new Set(data.nodes.map(n => n.category))].sort();
+uniqCats.forEach(cat => {
+  const item = document.createElement('div');
+  item.className = 'legend-item';
+  item.innerHTML = `<span class="legend-dot" style="background:${CAT_COLORS[cat]||'#888'}"></span>${CAT_LABELS[cat]||cat}`;
+  legendDiv.appendChild(item);
+});
+
+// --- D3 Force Graph ---
+const width = window.innerWidth;
+const height = window.innerHeight;
+
+const svg = d3.select('#graph').append('svg')
+  .attr('viewBox', [0,0,width,height])
+  .call(d3.zoom().scaleExtent([0.1, 4]).on('zoom', (e) => {
+    g.attr('transform', e.transform);
+  }));
+
+const g = svg.append('g');
+
+// Tooltip
+const tooltip = d3.select('#tooltip');
+
+// Build adjacency for highlighting
+const adjacency = {};
+data.edges.forEach(e => {
+  if (!adjacency[e.source]) adjacency[e.source] = new Set();
+  if (!adjacency[e.target]) adjacency[e.target] = new Set();
+  adjacency[e.source].add(e.target);
+  adjacency[e.target].add(e.source);
+});
+
+// Build reference lists for detail panel
+const refMap = {};
+data.edges.forEach(e => {
+  const sn = data.nodes[e.source];
+  const tn = data.nodes[e.target];
+  if (!refMap[e.source]) refMap[e.source] = [];
+  if (!refMap[e.target]) refMap[e.target] = [];
+  refMap[e.source].push(tn);
+  refMap[e.target].push(sn);
+});
+
+// Node size: base 5 + in_degree * 1.5, max 20
+const maxDeg = Math.max(...data.nodes.map(n => n.in_degree), 1);
+const nodeScale = d3.scaleSqrt().domain([0, maxDeg]).range([5, 22]);
+
+// Links
+const link = g.append('g')
+  .selectAll('line')
+  .data(data.edges)
+  .join('line')
+  .attr('stroke', 'rgba(255,255,255,0.08)')
+  .attr('stroke-width', 0.8);
+
+// Nodes
+const node = g.append('g')
+  .selectAll('g')
+  .data(data.nodes)
+  .join('g')
+  .attr('class', 'node')
+  .call(d3.drag()
+    .on('start', (ev,d) => { if(!ev.active) sim.alphaTarget(0.3).restart(); d.fx=d.x; d.fy=d.y; })
+    .on('drag', (ev,d) => { d.fx=ev.x; d.fy=ev.y; })
+    .on('end', (ev,d) => { if(!ev.active) sim.alphaTarget(0); d.fx=null; d.fy=null; })
+  );
+
+node.append('circle')
+  .attr('r', d => nodeScale(d.in_degree))
+  .attr('fill', d => CAT_COLORS[d.category] || '#888')
+  .attr('stroke', 'rgba(255,255,255,0.3)')
+  .attr('stroke-width', 1.5)
+  .attr('cursor', 'pointer')
+  .on('mouseover', function(ev, d) {
+    const neighbors = adjacency[d.id] || new Set();
+    node.selectAll('circle').attr('opacity', n => neighbors.has(n.id) || n.id===d.id ? 1 : 0.15);
+    link.attr('stroke-opacity', e => (e.source.id===d.id||e.target.id===d.id) ? 0.8 : 0.03);
+    link.attr('stroke-width', e => (e.source.id===d.id||e.target.id===d.id) ? 2 : 0.5);
+    tooltip.style('display','block')
+      .html(`<b>${d.label}</b><br>${CAT_LABELS[d.category]||d.category} · 入度${d.in_degree}`)
+      .style('left',(ev.pageX+12)+'px').style('top',(ev.pageY-28)+'px');
+  })
+  .on('mouseout', function() {
+    node.selectAll('circle').attr('opacity', 1);
+    link.attr('stroke-opacity', 1).attr('stroke-width', 0.8);
+    tooltip.style('display','none');
+  })
+  .on('click', function(ev, d) { showDetail(d); ev.stopPropagation(); });
+
+node.append('text')
+  .text(d => d.label.length > 8 ? d.label.slice(0,8)+'…' : d.label)
+  .attr('dy', d => nodeScale(d.in_degree) + 12)
+  .attr('text-anchor', 'middle')
+  .attr('fill', '#ccc')
+  .attr('font-size', '10px')
+  .attr('pointer-events', 'none');
+
+// Force simulation
+const sim = d3.forceSimulation(data.nodes)
+  .force('link', d3.forceLink(data.edges).id(d => d.id).distance(120))
+  .force('charge', d3.forceManyBody().strength(-300))
+  .force('center', d3.forceCenter(width/2, height/2))
+  .force('collision', d3.forceCollide().radius(d => nodeScale(d.in_degree)+8))
+  .on('tick', () => {
+    link.attr('x1', d => d.source.x).attr('y1', d => d.source.y)
+        .attr('x2', d => d.target.x).attr('y2', d => d.target.y);
+    node.attr('transform', d => `translate(${d.x},${d.y})`);
+  });
+
+// --- Click background to close detail ---
+svg.on('click', () => { document.getElementById('detail').style.display='none'; });
+
+// --- Detail Panel ---
+function showDetail(d) {
+  const panel = document.getElementById('detail');
+  document.getElementById('detail-title').textContent = d.label;
+  document.getElementById('detail-cat').textContent = CAT_LABELS[d.category] || d.category;
+  document.getElementById('detail-path').textContent = d.path;
+  document.getElementById('detail-indeg').textContent = d.in_degree;
+  
+  const tagsDiv = document.getElementById('detail-tags');
+  tagsDiv.innerHTML = d.tags.map(t => `<span class="tag">${t}</span>`).join('');
+  
+  const refsDiv = document.getElementById('detail-refs');
+  const refs = refMap[d.id] || [];
+  refsDiv.innerHTML = refs.map(r => 
+    `<div class="ref-item" data-nid="${r.id}">${r.label} (${CAT_LABELS[r.category]||r.category})</div>`
+  ).join('');
+  
+  refsDiv.querySelectorAll('.ref-item').forEach(el => {
+    el.addEventListener('click', function() {
+      const nid = +this.dataset.nid;
+      const target = data.nodes.find(n => n.id === nid);
+      if (target) showDetail(target);
+    });
+  });
+  
+  panel.style.display = 'block';
+}
+
+// --- Search ---
+document.getElementById('search-input').addEventListener('input', function() {
+  const q = this.value.toLowerCase().trim();
+  const resultsDiv = document.getElementById('search-results');
+  
+  if (!q) {
+    resultsDiv.textContent = '';
+    node.selectAll('circle').attr('opacity', 1);
+    link.attr('stroke-opacity', 1);
+    return;
+  }
+  
+  const matches = data.nodes.filter(n => 
+    n.label.toLowerCase().includes(q) || 
+    n.tags.some(t => t.toLowerCase().includes(q))
+  );
+  
+  resultsDiv.textContent = `匹配 ${matches.length} 个节点`;
+  
+  const matchIds = new Set(matches.map(n => n.id));
+  node.selectAll('circle').attr('opacity', n => matchIds.has(n.id) ? 1 : 0.1);
+  link.attr('stroke-opacity', 0.05);
+});
+
+// --- Stats ---
+document.getElementById('stat-nodes').textContent = data.stats.nodes;
+document.getElementById('stat-edges').textContent = data.stats.edges;
+document.getElementById('stat-avg').textContent = data.stats.avg_degree;
+
+// --- Responsive ---
+window.addEventListener('resize', () => {
+  const w = window.innerWidth, h = window.innerHeight;
+  svg.attr('viewBox', [0,0,w,h]);
+  sim.force('center', d3.forceCenter(w/2, h/2)).restart();
+});
+</script>
+</body>
+</html>

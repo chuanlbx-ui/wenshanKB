@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>笔记详情 · 文山州知识库</title>
+<script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+<style>
+:root {
+  --primary: #2d5a27; --primary-light: #3a7a32; --bg: #fafaf5; --card-bg: #fff;
+  --text: #1a1a2e; --text-secondary: #6b7280; --border: #e5e7eb; --accent: #d4a373;
+  --radius: 10px; --shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); }
+nav { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 0 20px; position: sticky; top: 0; z-index: 10; }
+.nav-inner { max-width: 1100px; margin: 0 auto; display: flex; gap: 32px; align-items: center; }
+.nav-inner .logo { font-weight: 700; color: var(--primary); font-size: 18px; text-decoration: none; padding: 14px 0; }
+nav a { display: block; padding: 14px 4px; color: var(--text-secondary); text-decoration: none; font-size: 14px; border-bottom: 2px solid transparent; }
+nav a:hover { color: var(--primary); border-bottom-color: var(--primary); }
+/* Layout */
+.layout { max-width: 1100px; margin: 0 auto; padding: 32px 20px; display: grid; grid-template-columns: 1fr 300px; gap: 32px; }
+@media (max-width: 768px) { .layout { grid-template-columns: 1fr; } }
+/* Main content */
+.article-header { margin-bottom: 24px; }
+.article-header h1 { font-size: 28px; color: var(--text); margin-bottom: 8px; }
+.article-meta { display: flex; gap: 16px; font-size: 13px; color: var(--text-secondary); flex-wrap: wrap; }
+.article-meta .badge { display: inline-block; padding: 2px 10px; border-radius: 12px; background: #dcfce7; color: #166534; font-size: 12px; }
+.article-body { background: var(--card-bg); border-radius: var(--radius); padding: 32px; box-shadow: var(--shadow); line-height: 1.8; }
+.article-body h1 { font-size: 24px; margin: 24px 0 12px; }
+.article-body h2 { font-size: 20px; margin: 20px 0 10px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.article-body h3 { font-size: 17px; margin: 16px 0 8px; }
+.article-body p { margin: 10px 0; }
+.article-body ul, .article-body ol { margin: 8px 0 8px 20px; }
+.article-body table { width: 100%; border-collapse: collapse; margin: 12px 0; }
+.article-body th, .article-body td { border: 1px solid var(--border); padding: 8px 12px; text-align: left; font-size: 14px; }
+.article-body th { background: #fafbfc; }
+.article-body blockquote { border-left: 3px solid var(--accent); padding: 8px 16px; margin: 12px 0; color: var(--text-secondary); background: #fefdf9; }
+.article-body code { background: #f3f4f6; padding: 2px 6px; border-radius: 4px; font-size: 13px; }
+.article-body pre { background: #1e1e2e; color: #d6d6d6; padding: 16px; border-radius: var(--radius); overflow-x: auto; font-size: 13px; margin: 12px 0; }
+.article-body pre code { background: none; padding: 0; }
+.article-body a { color: var(--primary); }
+/* Sidebar */
+.sidebar-section { background: var(--card-bg); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); margin-bottom: 16px; }
+.sidebar-section h3 { font-size: 16px; margin-bottom: 12px; padding-bottom: 6px; border-bottom: 1px solid var(--border); }
+.sidebar-section ul { list-style: none; }
+.sidebar-section li { padding: 8px 0; border-bottom: 1px solid var(--border); cursor: pointer; font-size: 14px; }
+.sidebar-section li:last-child { border-bottom: none; }
+.sidebar-section li:hover { color: var(--primary); }
+.sidebar-section .card-tag { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; background: #fff7ed; color: #c2410c; margin-left: 6px; }
+/* Loading */
+.loading { text-align: center; padding: 60px; color: var(--text-secondary); }
+.error { text-align: center; padding: 60px; color: #dc2626; }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="logo">文山州知识库</a>
+    <a href="index.html">首页</a>
+    <a href="search.html">搜索</a>
+    <a href="ai-tools.html">AI 创作工具</a>
+  </div>
+</nav>
+
+<div class="layout">
+  <div>
+    <div id="noteContent">
+      <div class="loading">加载中...</div>
+    </div>
+  </div>
+  <aside>
+    <!-- 素材卡片 -->
+    <div class="sidebar-section" id="materialCards">
+      <h3>相关素材卡片</h3>
+      <p style="color:var(--text-secondary);font-size:13px">加载中...</p>
+    </div>
+    <!-- 相关笔记 -->
+    <div class="sidebar-section" id="relatedNotes">
+      <h3>相关笔记</h3>
+      <ul id="relatedList"></ul>
+    </div>
+    <!-- 笔记信息 -->
+    <div class="sidebar-section" id="noteInfo">
+      <h3>笔记信息</h3>
+      <p id="noteInfoText" style="font-size:13px;color:var(--text-secondary)"></p>
+    </div>
+  </aside>
+</div>
+
+<script>
+const API_BASE = '/api/v1';
+const urlParams = new URLSearchParams(location.search);
+const slug = urlParams.get('slug');
+
+if (!slug) {
+  document.getElementById('noteContent').innerHTML = '<div class="error">缺少笔记 slug 参数</div>';
+} else {
+  loadNote(slug);
+  loadMaterials();
+  loadRelated(slug);
+}
+
+function loadNote(slug) {
+  fetch(API_BASE + '/notes/' + encodeURIComponent(slug))
+    .then(r => {
+      if (!r.ok) throw new Error('笔记不存在');
+      return r.json();
+    })
+    .then(note => {
+      document.title = note.title + ' · 文山州知识库';
+      // 使用 marked 渲染 markdown
+      let html = '';
+      try { html = marked.parse(note.content || ''); } catch(e) { html = note.content; }
+
+      document.getElementById('noteContent').innerHTML = `
+        <div class="article-header">
+          <h1>${note.title}</h1>
+          <div class="article-meta">
+            <span class="badge">${note.category||'未分类'}</span>
+            <span>${note.view_count||0} 浏览</span>
+            <span>${note.like_count||0} 点赞</span>
+            <span>更新于 ${note.updated_at ? new Date(note.updated_at).toLocaleDateString('zh-CN') : '-'}</span>
+          </div>
+        </div>
+        <div class="article-body">${html}</div>
+      `;
+
+      document.getElementById('noteInfoText').innerHTML = `
+        分类: ${note.category||'-'}<br>
+        浏览: ${note.view_count||0}<br>
+        点赞: ${note.like_count||0}<br>
+        状态: ${note.status||'-'}<br>
+        标签: ${(note.tags||[]).join(', ')||'无'}
+      `;
+    })
+    .catch(err => {
+      document.getElementById('noteContent').innerHTML = `
+        <div class="error">
+          <p>笔记加载失败: ${err.message}</p>
+          <p style="font-size:14px;margin-top:12px">后端未启动时显示示例内容</p>
+        </div>
+      `;
+      // 模拟回退
+      document.getElementById('noteContent').innerHTML = `
+        <div class="article-header">
+          <h1>${slug}</h1>
+          <div class="article-meta">
+            <span class="badge">示例分类</span>
+            <span>-- 浏览</span>
+            <span>更新于 --</span>
+          </div>
+        </div>
+        <div class="article-body">
+          <p>后端 API 未启动。启动 <code>app.py</code> 后即可查看笔记内容。</p>
+          <p>或访问 Obsidian 知识库直接查看原始 Markdown 文件。</p>
+        </div>
+      `;
+    });
+}
+
+function loadMaterials() {
+  fetch(API_BASE + '/materials?limit=5', { headers: { 'X-API-Key': 'wskb-dev-key' } })
+    .then(r => r.json())
+    .then(d => {
+      const cards = d.cards || [];
+      document.getElementById('materialCards').innerHTML = `
+        <h3>素材卡片</h3>
+        ${cards.map(c => `<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:13px">
+          <strong>${c.title}</strong>
+          <p style="color:var(--text-secondary);margin:4px 0">${(c.core_data||'').substring(0,80)}...</p>
+          <span class="card-tag">${c.category||''}</span>
+        </div>`).join('') || '<p style="color:var(--text-secondary);font-size:13px">暂无素材卡片</p>'}
+      `;
+    }).catch(() => {});
+}
+
+function loadRelated(slug) {
+  fetch(API_BASE + '/notes/' + encodeURIComponent(slug) + '/related')
+    .then(r => r.json())
+    .then(d => {
+      const notes = d.notes || [];
+      document.getElementById('relatedList').innerHTML = notes.map(n =>
+        `<li onclick="location.href='note.html?slug=${encodeURIComponent(n.slug)}'">${n.title} <span class="card-tag">${n.category||''}</span></li>`
+      ).join('') || '<li style="color:var(--text-secondary);font-size:13px">暂无相关笔记</li>';
+    }).catch(() => {
+      document.getElementById('relatedList').innerHTML = '<li style="color:var(--text-secondary);font-size:13px">后端未启动</li>';
+    });
+}
+</script>
+</body>
+</html>

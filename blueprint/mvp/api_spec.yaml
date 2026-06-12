@@ -1,0 +1,536 @@
+openapi: "3.0.3"
+info:
+  title: WenShanKB API
+  description: |
+    文山州 AI 创作公共知识库系统 API。
+    提供语义搜索、笔记管理、素材卡片、Prompt 模板和合规检查服务。
+  version: "0.1.0"
+  contact:
+    name: WenShanKB Team
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:8000/api/v1
+    description: 本地开发环境
+  - url: https://wenshan-kb.example.com/api/v1
+    description: 生产环境
+
+security:
+  - BearerAuth: []
+  - ApiKeyAuth: []
+
+# ── 安全 ────────────────────────────────────────────
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: 用户登录 JWT Token
+    ApiKeyAuth:
+      type: apiKey
+      in: header
+      name: X-API-Key
+      description: Agent API Key（wskb- 前缀）
+
+  # ── 通用数据模型 ──────────────────────────────────
+  schemas:
+    # --- 基础 ---
+    Error:
+      type: object
+      properties:
+        code: { type: string, example: "NOT_FOUND" }
+        message: { type: string, example: "笔记不存在" }
+        details: { type: object }
+
+    Pagination:
+      type: object
+      properties:
+        page: { type: integer, example: 1 }
+        page_size: { type: integer, example: 20 }
+        total: { type: integer, example: 121 }
+        total_pages: { type: integer, example: 7 }
+
+    # --- 笔记 ---
+    NoteSummary:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        title: { type: string, example: "普者黑旅游攻略" }
+        slug: { type: string, example: "普者黑旅游攻略" }
+        category: { type: string, example: "文化旅游" }
+        status: { type: string, enum: [draft, pending_review, published, archived] }
+        freshness: { type: string, enum: [fresh, aging, stale, expired] }
+        tags: { type: array, items: { type: string } }
+        excerpt: { type: string, description: "摘要，前 200 字符" }
+        view_count: { type: integer }
+        like_count: { type: integer }
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    NoteDetail:
+      allOf:
+        - $ref: "#/components/schemas/NoteSummary"
+        - type: object
+          properties:
+            content: { type: string, description: "完整 Markdown 正文" }
+            frontmatter: { type: object }
+            attachments: { type: array, items: { $ref: "#/components/schemas/Attachment" } }
+            incoming_links: { type: array, items: { $ref: "#/components/schemas/LinkRef" } }
+            outgoing_links: { type: array, items: { $ref: "#/components/schemas/LinkRef" } }
+
+    Attachment:
+      type: object
+      properties:
+        name: { type: string }
+        url: { type: string }
+        type: { type: string, example: "image/png" }
+        size: { type: integer }
+
+    LinkRef:
+      type: object
+      properties:
+        note_id: { type: string, format: uuid }
+        title: { type: string }
+        slug: { type: string }
+        link_text: { type: string }
+
+    # --- 搜索 ---
+    SearchResult:
+      type: object
+      properties:
+        note: { $ref: "#/components/schemas/NoteSummary" }
+        score: { type: number, example: 0.92 }
+        snippet: { type: string, description: "匹配片段高亮文本" }
+        match_type: { type: string, enum: [semantic, fulltext, hybrid] }
+
+    SearchResponse:
+      type: object
+      properties:
+        results: { type: array, items: { $ref: "#/components/schemas/SearchResult" } }
+        pagination: { $ref: "#/components/schemas/Pagination" }
+        search_time_ms: { type: integer, example: 85 }
+
+    # --- 素材卡片 ---
+    MaterialCard:
+      type: object
+      properties:
+        id: { type: string, example: "卡03" }
+        title: { type: string, example: ""金不换"——文山三七占全国 90% 产量" }
+        core_data: { type: string }
+        category: { type: string }
+        applicable_scenarios: { type: array, items: { type: string } }
+        source_note: { type: string, description: "来源笔记 wikilink" }
+        full_content: { type: string, description: "完整 Markdown 内容" }
+
+    # --- Prompt ---
+    PromptTemplate:
+      type: object
+      properties:
+        id: { type: integer }
+        scenario: { type: string, example: "农产品带货" }
+        sub_scenario: { type: string, example: "三七带货脚本" }
+        title: { type: string }
+        template_content: { type: string, description: "完整 Prompt 文本" }
+        negative_prompts: { type: array, items: { type: string } }
+        suggested_cards: { type: array, items: { type: string }, example: ["卡03", "卡11"] }
+        related_style: { type: string }
+
+    # --- 合规 ---
+    ComplianceRequest:
+      type: object
+      required: [content]
+      properties:
+        content: { type: string, description: "待检查文本" }
+        content_type: { type: string, enum: [政务宣传, 文旅推广, 农产品带货, 民族文化, 新闻通讯, 乡土故事, 通用], default: 通用 }
+        check_categories: { type: array, items: { type: string, enum: [border, ethnic, military, advertising, data_accuracy, copyright, all] } }
+
+    ComplianceIssue:
+      type: object
+      properties:
+        category: { type: string }
+        severity: { type: string, enum: [high, medium, low] }
+        location: { type: string, description: "问题所在位置描述" }
+        issue: { type: string, description: "问题描述" }
+        suggestion: { type: string, description: "修改建议" }
+        rule_ref: { type: string }
+
+    ComplianceResponse:
+      type: object
+      properties:
+        passed: { type: boolean }
+        overall_score: { type: integer, minimum: 0, maximum: 100 }
+        issues: { type: array, items: { $ref: "#/components/schemas/ComplianceIssue" } }
+        warnings: { type: array, items: { $ref: "#/components/schemas/ComplianceIssue" } }
+        passed_checks: { type: array, items: { type: string } }
+        check_time_ms: { type: integer }
+
+    # --- 反馈 ---
+    FeedbackRequest:
+      type: object
+      required: [feedback_type, content]
+      properties:
+        feedback_type: { type: string, enum: [content_suggestion, error_correction, knowledge_gap, quality_feedback] }
+        related_note_slug: { type: string, description: "关联笔记 slug" }
+        content: { type: string, description: "反馈详细内容" }
+        source_conversation_id: { type: string }
+
+  # ── 通用参数 ──────────────────────────────────────
+  parameters:
+    NoteSlug:
+      name: slug
+      in: path
+      required: true
+      schema: { type: string }
+      description: 笔记 URL slug
+      example: "普者黑旅游攻略"
+
+# ── 路径 ────────────────────────────────────────────
+paths:
+  # =========================================
+  # 搜索
+  # =========================================
+  /search:
+    post:
+      summary: 语义搜索
+      description: |
+        在知识库中执行混合搜索（全文+语义），返回匹配的笔记。
+        支持按分类、标签、状态过滤。
+      operationId: searchNotes
+      tags: [搜索]
+      security: [{ApiKeyAuth: []}, {BearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [query]
+              properties:
+                query:
+                  type: string
+                  description: 搜索查询（自然语言）
+                  example: "文山三七的种植面积和产量数据"
+                category:
+                  type: string
+                  description: 按分类过滤
+                  example: "07-特产与资源"
+                tags:
+                  type: array
+                  items: { type: string }
+                  description: 按标签过滤
+                  example: ["三七", "经济"]
+                status:
+                  type: string
+                  enum: [draft, pending_review, published, archived]
+                  default: published
+                search_mode:
+                  type: string
+                  enum: [semantic, fulltext, hybrid]
+                  default: hybrid
+                  description: 搜索模式
+                page: { type: integer, default: 1 }
+                page_size: { type: integer, default: 20, maximum: 50 }
+      responses:
+        "200":
+          description: 搜索结果
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SearchResponse" }
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "503":
+          $ref: "#/components/responses/ServiceUnavailable"
+
+  # =========================================
+  # 笔记
+  # =========================================
+  /notes:
+    get:
+      summary: 笔记列表
+      operationId: listNotes
+      tags: [笔记]
+      parameters:
+        - name: category
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { type: string, default: published }
+        - name: tag
+          in: query
+          schema: { type: string }
+        - name: page
+          in: query
+          schema: { type: integer, default: 1 }
+        - name: page_size
+          in: query
+          schema: { type: integer, default: 20 }
+      responses:
+        "200":
+          description: 笔记列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notes: { type: array, items: { $ref: "#/components/schemas/NoteSummary" } }
+                  pagination: { $ref: "#/components/schemas/Pagination" }
+
+  /notes/{slug}:
+    get:
+      summary: 笔记详情
+      operationId: getNote
+      tags: [笔记]
+      parameters:
+        - $ref: "#/components/parameters/NoteSlug"
+      responses:
+        "200":
+          description: 笔记详情
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/NoteDetail" }
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /notes/{slug}/related:
+    get:
+      summary: 相关笔记推荐
+      operationId: getRelatedNotes
+      tags: [笔记]
+      parameters:
+        - $ref: "#/components/parameters/NoteSlug"
+        - name: limit
+          in: query
+          schema: { type: integer, default: 5 }
+      responses:
+        "200":
+          description: 相关笔记列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  notes: { type: array, items: { $ref: "#/components/schemas/NoteSummary" } }
+                  relation_type: { type: string, enum: [wikilink, semantic, tag_based] }
+
+  # =========================================
+  # 素材卡片
+  # =========================================
+  /materials:
+    get:
+      summary: 素材卡片查询
+      description: |
+        查询文山素材卡片。可指定卡片 ID、按语义匹配、或按分类筛选。
+        Agent 调用时不传 card_ids 则自动语义匹配。
+      operationId: getMaterialCards
+      tags: [素材卡片]
+      security: [{ApiKeyAuth: []}, {BearerAuth: []}]
+      parameters:
+        - name: card_ids
+          in: query
+          schema: { type: string }
+          description: 逗号分隔的卡片 ID，如 "卡03,卡07"
+        - name: query
+          in: query
+          schema: { type: string }
+          description: 语义匹配查询（与 card_ids 二选一）
+        - name: category
+          in: query
+          schema:
+            type: string
+            enum: [经济数据, 旅游亮点, 特产卖点, 民族文化, 历史事件, 人物故事, 特色数据]
+        - name: limit
+          in: query
+          schema: { type: integer, default: 3, maximum: 10 }
+      responses:
+        "200":
+          description: 素材卡片列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  cards: { type: array, items: { $ref: "#/components/schemas/MaterialCard" } }
+                  total: { type: integer }
+
+  # =========================================
+  # Prompt 模板
+  # =========================================
+  /prompts:
+    get:
+      summary: 提示词模板查询
+      description: |
+        按场景获取即用型 AI Prompt 模板。可指定子场景或传入自定义上下文。
+      operationId: getPromptTemplates
+      tags: [提示词]
+      security: [{ApiKeyAuth: []}, {BearerAuth: []}]
+      parameters:
+        - name: scenario
+          in: query
+          required: true
+          schema:
+            type: string
+            enum: [政务宣传, 文旅推广, 农产品带货, 民族文化, 新闻通讯, 乡土故事]
+        - name: sub_scenario
+          in: query
+          schema: { type: string }
+          description: 子场景名称（可选，不传则返回该场景全部模板）
+        - name: custom_context
+          in: query
+          schema: { type: string }
+          description: 自定义上下文，填充到模板 [填写] 字段
+      responses:
+        "200":
+          description: Prompt 模板
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  scenario: { type: string }
+                  templates: { type: array, items: { $ref: "#/components/schemas/PromptTemplate" } }
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /prompts/scenarios:
+    get:
+      summary: 获取所有可用场景
+      operationId: listPromptScenarios
+      tags: [提示词]
+      responses:
+        "200":
+          description: 场景列表
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  scenarios:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        name: { type: string }
+                        template_count: { type: integer }
+
+  # =========================================
+  # 合规检查
+  # =========================================
+  /compliance/check:
+    post:
+      summary: 合规检查
+      description: |
+        检查文本的合规性，覆盖边境、民族、军事、广告法、数据准确性、版权六个维度。
+      operationId: checkCompliance
+      tags: [合规]
+      security: [{ApiKeyAuth: []}, {BearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/ComplianceRequest" }
+      responses:
+        "200":
+          description: 合规检查结果
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ComplianceResponse" }
+
+  # =========================================
+  # 反馈
+  # =========================================
+  /feedback:
+    post:
+      summary: 提交反馈
+      description: Agent 或用户提交内容反馈，驱动知识库自进化。
+      operationId: submitFeedback
+      tags: [反馈]
+      security: [{ApiKeyAuth: []}, {BearerAuth: []}]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/FeedbackRequest" }
+      responses:
+        "201":
+          description: 反馈已接收
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  feedback_id: { type: string, format: uuid }
+                  status: { type: string, example: "pending" }
+
+  # =========================================
+  # 健康检查
+  # =========================================
+  /health:
+    get:
+      summary: 健康检查
+      operationId: healthCheck
+      tags: [系统]
+      security: []
+      responses:
+        "200":
+          description: 服务健康
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: "healthy" }
+                  version: { type: string, example: "0.1.0" }
+                  database: { type: string, example: "connected" }
+                  vector_index: { type: string, example: "ready" }
+                  uptime_seconds: { type: integer }
+
+# ── 通用响应 ────────────────────────────────────────
+components:
+  responses:
+    BadRequest:
+      description: 请求参数错误
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    NotFound:
+      description: 资源不存在
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Unauthorized:
+      description: 未认证
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    ServiceUnavailable:
+      description: 服务不可用
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    RateLimited:
+      description: 请求频率超限
+      headers:
+        Retry-After:
+          schema: { type: integer }
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+tags:
+  - name: 搜索
+    description: 语义搜索与全文检索
+  - name: 笔记
+    description: 笔记 CRUD 与关联查询
+  - name: 素材卡片
+    description: 素材卡片查询（Agent Tools）
+  - name: 提示词
+    description: Prompt 模板查询（Agent Tools）
+  - name: 合规
+    description: 内容合规检查（Agent Tools）
+  - name: 反馈
+    description: 用户反馈回流
+  - name: 系统
+    description: 健康检查与运维接口

@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>WenShanKB 管理后台</title>
+<style>
+:root {
+  --primary: #2d5a27;
+  --primary-light: #3a7a32;
+  --bg: #f5f6f8;
+  --card-bg: #fff;
+  --text: #1a1a2e;
+  --text-secondary: #6b7280;
+  --border: #e5e7eb;
+  --danger: #dc2626;
+  --success: #16a34a;
+  --warning: #f59e0b;
+  --radius: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,.08);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); }
+/* Login */
+.login-container { max-width: 400px; margin: 120px auto; padding: 40px; background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); }
+.login-container h1 { color: var(--primary); text-align: center; margin-bottom: 8px; }
+.login-container p { text-align: center; color: var(--text-secondary); margin-bottom: 24px; font-size: 14px; }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; margin-bottom: 6px; font-weight: 500; font-size: 14px; }
+.form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; transition: border-color .2s; }
+.form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: var(--primary); }
+textarea { resize: vertical; min-height: 120px; font-family: inherit; }
+.btn { padding: 10px 20px; border: none; border-radius: var(--radius); font-size: 14px; cursor: pointer; font-weight: 500; transition: all .2s; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-light); }
+.btn-danger { background: var(--danger); color: #fff; }
+.btn-danger:hover { opacity: .9; }
+.btn-sm { padding: 6px 12px; font-size: 13px; }
+.btn-ghost { background: transparent; border: 1px solid var(--border); }
+.btn-ghost:hover { background: var(--bg); }
+/* Layout */
+#app { display: none; min-height: 100vh; }
+#app.show { display: flex; }
+.sidebar { width: 220px; background: var(--primary); color: #fff; padding: 20px 0; flex-shrink: 0; min-height: 100vh; }
+.sidebar h2 { padding: 0 20px 20px; font-size: 18px; border-bottom: 1px solid rgba(255,255,255,.2); }
+.sidebar nav a { display: block; padding: 12px 20px; color: rgba(255,255,255,.8); text-decoration: none; font-size: 14px; transition: all .2s; }
+.sidebar nav a:hover, .sidebar nav a.active { background: rgba(255,255,255,.1); color: #fff; }
+.main { flex: 1; padding: 24px; overflow-y: auto; }
+/* Cards */
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; margin-bottom: 24px; }
+.stat-card { background: var(--card-bg); padding: 20px; border-radius: var(--radius); box-shadow: var(--shadow); }
+.stat-card h3 { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .5px; }
+.stat-card .value { font-size: 28px; font-weight: 700; color: var(--primary); }
+/* Table */
+.table-wrap { background: var(--card-bg); border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.table-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+.table-header h3 { font-size: 16px; }
+table { width: 100%; border-collapse: collapse; }
+th { text-align: left; padding: 12px 20px; font-size: 12px; text-transform: uppercase; letter-spacing: .5px; color: var(--text-secondary); background: #fafbfc; border-bottom: 1px solid var(--border); }
+td { padding: 12px 20px; border-bottom: 1px solid var(--border); font-size: 14px; }
+tr:hover { background: #fafbfc; }
+/* Badge */
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+.badge-published { background: #dcfce7; color: #166534; }
+.badge-draft { background: #fef3c7; color: #92400e; }
+.badge-pending { background: #dbeafe; color: #1e40af; }
+.badge-archived { background: #f3f4f6; color: #6b7280; }
+.badge-rejected { background: #fee2e2; color: #991b1b; }
+/* Modal */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.4); z-index: 100; justify-content: center; align-items: center; }
+.modal-overlay.show { display: flex; }
+.modal { background: var(--card-bg); border-radius: var(--radius); padding: 24px; max-width: 700px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 10px 40px rgba(0,0,0,.15); }
+.modal h3 { margin-bottom: 16px; }
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+/* Search bar */
+.search-bar { display: flex; gap: 8px; }
+.search-bar input { padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; width: 250px; }
+/* Toast */
+.toast { position: fixed; top: 20px; right: 20px; padding: 12px 20px; border-radius: var(--radius); color: #fff; font-size: 14px; z-index: 200; animation: slideIn .3s; }
+.toast-success { background: var(--success); }
+.toast-error { background: var(--danger); }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+.hidden { display: none !important; }
+.empty { padding: 40px; text-align: center; color: var(--text-secondary); }
+</style>
+</head>
+<body>
+
+<!-- 登录页 -->
+<div id="loginPage" class="login-container">
+  <h1>WenShanKB</h1>
+  <p>文山州AI创作公共知识库 · 管理后台</p>
+  <div class="form-group">
+    <label>API Key</label>
+    <input type="password" id="apiKeyInput" placeholder="wskb-xxxxxxxx" autofocus>
+  </div>
+  <button class="btn btn-primary" onclick="doLogin()" style="width:100%">登录</button>
+  <div id="loginError" style="color:var(--danger);text-align:center;margin-top:12px;font-size:13px;display:none"></div>
+</div>
+
+<!-- 主应用 -->
+<div id="app">
+  <aside class="sidebar">
+    <h2>WenShanKB</h2>
+    <nav>
+      <a href="#" data-page="dashboard" class="active" onclick="switchPage('dashboard')">仪表盘</a>
+      <a href="#" data-page="notes" onclick="switchPage('notes')">笔记管理</a>
+      <a href="#" data-page="review" onclick="switchPage('review')">审核队列</a>
+      <a href="#" onclick="doLogout()">退出登录</a>
+    </nav>
+  </aside>
+  <main class="main">
+    <!-- 仪表盘 -->
+    <section id="page-dashboard">
+      <div class="stats-grid" id="dashboardStats"></div>
+      <div class="table-wrap">
+        <div class="table-header"><h3>最近更新</h3></div>
+        <div id="recentNotes"></div>
+      </div>
+    </section>
+    <!-- 笔记管理 -->
+    <section id="page-notes" class="hidden">
+      <div class="table-wrap">
+        <div class="table-header">
+          <h3>笔记列表</h3>
+          <div class="search-bar">
+            <input type="text" id="noteSearch" placeholder="搜索标题..." oninput="loadNotes()">
+            <button class="btn btn-primary btn-sm" onclick="openNoteModal()">+ 新建笔记</button>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>标题</th><th>分类</th><th>状态</th><th>浏览</th><th>更新</th><th>操作</th></tr></thead>
+          <tbody id="notesTableBody"></tbody>
+        </table>
+        <div id="notesPagination" style="padding:12px 20px;text-align:center;font-size:13px;color:var(--text-secondary)"></div>
+      </div>
+    </section>
+    <!-- 审核队列 -->
+    <section id="page-review" class="hidden">
+      <div class="table-wrap">
+        <div class="table-header"><h3>待审核内容</h3></div>
+        <div id="reviewList"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- 编辑笔记弹窗 -->
+<div class="modal-overlay" id="noteModal">
+  <div class="modal">
+    <h3 id="noteModalTitle">新建笔记</h3>
+    <div class="form-group">
+      <label>标题</label>
+      <input type="text" id="editTitle" placeholder="笔记标题">
+    </div>
+    <div class="form-group">
+      <label>Slug</label>
+      <input type="text" id="editSlug" placeholder="url-slug">
+    </div>
+    <div class="form-group" style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div><label>分类</label>
+        <select id="editCategory">
+          <option value="">-- 选择分类 --</option>
+        </select>
+      </div>
+      <div><label>状态</label>
+        <select id="editStatus">
+          <option value="draft">草稿</option>
+          <option value="pending_review">待审核</option>
+          <option value="published">已发布</option>
+          <option value="archived">归档</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>标签（逗号分隔）</label>
+      <input type="text" id="editTags" placeholder="旅游, 普者黑, 5A景区">
+    </div>
+    <div class="form-group">
+      <label>正文（Markdown）</label>
+      <textarea id="editContent" rows="12"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closeNoteModal()">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="saveNote()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── 状态 ──
+const API_BASE = '/api/v1';
+let apiKey = localStorage.getItem('wskb_api_key') || '';
+let currentPage = 'dashboard';
+let editNoteId = null;
+
+// ── 认证 ──
+function doLogin() {
+  apiKey = document.getElementById('apiKeyInput').value.trim();
+  if (!apiKey) return showLoginError('请输入 API Key');
+  fetch(API_BASE + '/health', { headers: { 'X-API-Key': apiKey } })
+    .then(r => r.json())
+    .then(d => {
+      if (d.status === 'healthy' || d.status === 'degraded') {
+        localStorage.setItem('wskb_api_key', apiKey);
+        document.getElementById('loginPage').style.display = 'none';
+        document.getElementById('app').classList.add('show');
+        switchPage('dashboard');
+      } else { showLoginError('API Key 无效'); }
+    })
+    .catch(() => showLoginError('无法连接服务器'));
+}
+function showLoginError(msg) {
+  const el = document.getElementById('loginError');
+  el.textContent = msg; el.style.display = 'block';
+  setTimeout(() => el.style.display = 'none', 3000);
+}
+function doLogout() {
+  localStorage.removeItem('wskb_api_key');
+  location.reload();
+}
+function apiHeaders() {
+  return { 'X-API-Key': apiKey, 'Content-Type': 'application/json' };
+}
+
+// ── 页面切换 ──
+function switchPage(page) {
+  currentPage = page;
+  document.querySelectorAll('#app section').forEach(s => s.classList.add('hidden'));
+  document.getElementById('page-' + page).classList.remove('hidden');
+  document.querySelectorAll('.sidebar nav a').forEach(a => a.classList.remove('active'));
+  document.querySelector(`[data-page="${page}"]`).classList.add('active');
+  if (page === 'dashboard') loadDashboard();
+  else if (page === 'notes') loadNotes();
+  else if (page === 'review') loadReview();
+}
+
+// ── 仪表盘 ──
+function loadDashboard() {
+  fetch(API_BASE + '/notes?page_size=100', { headers: { 'X-API-Key': apiKey } })
+    .then(r => r.json())
+    .then(d => {
+      const notes = d.notes || [];
+      const published = notes.filter(n => n.status === 'published').length;
+      const draft = notes.filter(n => n.status === 'draft').length;
+      const pending = notes.filter(n => n.status === 'pending_review').length;
+      // 分类统计
+      const cats = {};
+      notes.forEach(n => { const c = n.category || '未分类'; cats[c] = (cats[c] || 0) + 1; });
+      document.getElementById('dashboardStats').innerHTML = `
+        <div class="stat-card"><h3>笔记总数</h3><div class="value">${notes.length}</div></div>
+        <div class="stat-card"><h3>已发布</h3><div class="value">${published}</div></div>
+        <div class="stat-card"><h3>待审核</h3><div class="value">${pending}</div></div>
+        <div class="stat-card"><h3>草稿</h3><div class="value">${draft}</div></div>
+        <div class="stat-card"><h3>总浏览</h3><div class="value">${notes.reduce((s,n) => s + (n.view_count||0), 0)}</div></div>
+        <div class="stat-card"><h3>总点赞</h3><div class="value">${notes.reduce((s,n) => s + (n.like_count||0), 0)}</div></div>
+      `;
+      // 最近更新
+      const recent = [...notes].sort((a,b) => new Date(b.updated_at||0) - new Date(a.updated_at||0)).slice(0, 10);
+      document.getElementById('recentNotes').innerHTML = recent.length ? `
+        <table><thead><tr><th>标题</th><th>状态</th><th>浏览</th><th>更新时间</th></tr></thead><tbody>
+        ${recent.map(n => `<tr>
+          <td>${n.title}</td>
+          <td><span class="badge badge-${n.status}">${n.status}</span></td>
+          <td>${n.view_count||0}</td>
+          <td>${n.updated_at ? new Date(n.updated_at).toLocaleString('zh-CN') : '-'}</td>
+        </tr>`).join('')}
+        </tbody></table>
+      ` : '<div class="empty">暂无数据</div>';
+    }).catch(() => {
+      document.getElementById('dashboardStats').innerHTML = '<div class="empty">无法加载仪表盘数据</div>';
+    });
+}
+
+// ── 笔记管理 ──
+function loadNotes() {
+  const q = document.getElementById('noteSearch')?.value || '';
+  fetch(API_BASE + '/notes?page_size=100' + (q ? '' : ''), { headers: { 'X-API-Key': apiKey } })
+    .then(r => r.json())
+    .then(d => {
+      let notes = d.notes || [];
+      if (q) notes = notes.filter(n => n.title.includes(q) || (n.category||'').includes(q));
+      document.getElementById('notesTableBody').innerHTML = notes.map(n => `<tr>
+        <td><strong>${n.title}</strong></td>
+        <td>${n.category||'--'}</td>
+        <td><span class="badge badge-${n.status}">${n.status}</span></td>
+        <td>${n.view_count||0}</td>
+        <td>${n.updated_at ? new Date(n.updated_at).toLocaleDateString('zh-CN') : '-'}</td>
+        <td>
+          <button class="btn btn-ghost btn-sm" onclick="editNote('${n.slug}')">编辑</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteNote('${n.slug}')">删除</button>
+        </td>
+      </tr>`).join('') || '<tr><td colspan="6" class="empty">暂无笔记</td></tr>';
+    });
+}
+
+function openNoteModal(slug) {
+  editNoteId = slug || null;
+  document.getElementById('noteModalTitle').textContent = slug ? '编辑笔记' : '新建笔记';
+  document.getElementById('editTitle').value = '';
+  document.getElementById('editSlug').value = '';
+  document.getElementById('editContent').value = '';
+  document.getElementById('editTags').value = '';
+  document.getElementById('editStatus').value = 'draft';
+  // 加载分类
+  const catSelect = document.getElementById('editCategory');
+  catSelect.innerHTML = '<option value="">-- 选择分类 --</option>' +
+    ['00-总览','01-地理与自然环境','02-历史沿革','03-行政区划','04-人口与民族','05-经济发展','06-文化旅游','07-特产与资源','08-交通与基础设施','09-政策与治理','10-社会民生','synthesis','ai-hub'].map(c => `<option value="${c}">${c}</option>`).join('');
+
+  if (slug) {
+    fetch(API_BASE + '/notes/' + slug, { headers: { 'X-API-Key': apiKey } })
+      .then(r => r.json())
+      .then(n => {
+        document.getElementById('editTitle').value = n.title || '';
+        document.getElementById('editSlug').value = n.slug || '';
+        document.getElementById('editContent').value = n.content || '';
+        document.getElementById('editStatus').value = n.status || 'draft';
+        document.getElementById('editTags').value = (n.tags || []).join(', ');
+        if (n.category) document.getElementById('editCategory').value = n.category;
+        document.getElementById('noteModal').classList.add('show');
+      });
+  } else {
+    document.getElementById('noteModal').classList.add('show');
+  }
+}
+
+function closeNoteModal() {
+  document.getElementById('noteModal').classList.remove('show');
+  editNoteId = null;
+}
+
+function editNote(slug) {
+  // 直接跳转简化：管理端不支持直接编辑 API（需要 PUT endpoint）
+  // 这里用弹窗展示基本信息
+  fetch(API_BASE + '/notes/' + slug, { headers: { 'X-API-Key': apiKey } })
+    .then(r => r.json())
+    .then(n => {
+      toast(`笔记详情: ${n.title} (${n.status})，完整编辑功能需升级 API`);
+    });
+}
+
+function deleteNote(slug) {
+  if (!confirm(`确定要删除笔记 "${slug}" 吗？`)) return;
+  toast('删除功能需通过管理 API 实现，当前版本请直接操作数据库');
+}
+
+function saveNote() {
+  const title = document.getElementById('editTitle').value.trim();
+  const content = document.getElementById('editContent').value.trim();
+  if (!title || !content) { toast('标题和正文不能为空', 'error'); return; }
+  toast('保存功能需通过管理 API 实现，MVP 阶段请使用 migrate.py 导入数据');
+  closeNoteModal();
+}
+
+// ── 审核队列 ──
+function loadReview() {
+  fetch(API_BASE + '/notes?page_size=100', { headers: { 'X-API-Key': apiKey } })
+    .then(r => r.json())
+    .then(d => {
+      const pending = (d.notes || []).filter(n => n.status === 'pending_review');
+      document.getElementById('reviewList').innerHTML = pending.length ? `
+        <table><thead><tr><th>标题</th><th>分类</th><th>提交时间</th><th>操作</th></tr></thead><tbody>
+        ${pending.map(n => `<tr>
+          <td><strong>${n.title}</strong></td><td>${n.category||'--'}</td>
+          <td>${n.created_at ? new Date(n.created_at).toLocaleString('zh-CN') : '-'}</td>
+          <td>
+            <button class="btn btn-primary btn-sm" onclick="reviewAction('${n.slug}','approve')">通过</button>
+            <button class="btn btn-danger btn-sm" onclick="reviewAction('${n.slug}','reject')">驳回</button>
+          </td>
+        </tr>`).join('')}
+        </tbody></table>
+      ` : '<div class="empty">暂无待审核内容</div>';
+    });
+}
+
+function reviewAction(slug, action) {
+  toast(`${action === 'approve' ? '通过' : '驳回'}审核操作需通过管理 API 实现`);
+}
+
+// ── Toast ──
+function toast(msg, type) {
+  type = type || 'success';
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2500);
+}
+
+// ── 初始化 ──
+if (apiKey) {
+  document.getElementById('loginPage').style.display = 'none';
+  document.getElementById('app').classList.add('show');
+  switchPage('dashboard');
+}
+</script>
+</body>
+</html>

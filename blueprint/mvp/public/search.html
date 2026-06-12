@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>搜索 · 文山州知识库</title>
+<style>
+:root {
+  --primary: #2d5a27; --primary-light: #3a7a32; --bg: #fafaf5; --card-bg: #fff;
+  --text: #1a1a2e; --text-secondary: #6b7280; --border: #e5e7eb; --accent: #d4a373;
+  --radius: 10px; --shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); }
+nav { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 0 20px; position: sticky; top: 0; z-index: 10; }
+.nav-inner { max-width: 1100px; margin: 0 auto; display: flex; gap: 32px; align-items: center; }
+.nav-inner .logo { font-weight: 700; color: var(--primary); font-size: 18px; text-decoration: none; padding: 14px 0; }
+nav a { display: block; padding: 14px 4px; color: var(--text-secondary); text-decoration: none; font-size: 14px; border-bottom: 2px solid transparent; }
+nav a:hover, nav a.active { color: var(--primary); border-bottom-color: var(--primary); }
+.container { max-width: 900px; margin: 0 auto; padding: 32px 20px; }
+/* Search */
+.search-box { display: flex; gap: 8px; margin-bottom: 24px; }
+.search-box input { flex: 1; padding: 14px 20px; border: 2px solid var(--border); border-radius: var(--radius); font-size: 16px; }
+.search-box input:focus { outline: none; border-color: var(--primary); }
+.search-box button { padding: 14px 28px; border: none; border-radius: var(--radius); background: var(--primary); color: #fff; font-size: 16px; cursor: pointer; }
+.search-box button:hover { background: var(--primary-light); }
+.filters { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.filters select { padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; }
+/* Results */
+.result-item { background: var(--card-bg); border-radius: var(--radius); padding: 20px; margin-bottom: 12px; box-shadow: var(--shadow); cursor: pointer; transition: all .2s; }
+.result-item:hover { box-shadow: 0 4px 16px rgba(0,0,0,.1); transform: translateY(-1px); }
+.result-item h3 { font-size: 18px; margin-bottom: 6px; color: var(--primary); }
+.result-item .snippet { font-size: 14px; color: var(--text-secondary); margin-bottom: 8px; }
+.result-item .meta { font-size: 12px; color: var(--accent); display: flex; gap: 16px; }
+.result-item .score { font-size: 12px; color: var(--text-secondary); }
+.highlight { background: #fef3c7; padding: 0 2px; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; background: #dcfce7; color: #166534; }
+.empty { text-align: center; padding: 60px 20px; color: var(--text-secondary); }
+.empty p { font-size: 16px; margin-bottom: 8px; }
+/* Pagination */
+.pagination { display: flex; justify-content: center; gap: 8px; margin-top: 20px; }
+.pagination button { padding: 8px 14px; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card-bg); cursor: pointer; font-size: 14px; }
+.pagination button:disabled { opacity: .5; cursor: default; }
+.pagination button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="logo">文山州知识库</a>
+    <a href="index.html">首页</a>
+    <a href="search.html" class="active">搜索</a>
+    <a href="ai-tools.html">AI 创作工具</a>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="search-box">
+    <input type="text" id="searchInput" placeholder="输入关键词搜索知识库..." autofocus>
+    <button onclick="doSearch()">搜索</button>
+  </div>
+
+  <div class="filters">
+    <select id="filterCategory" onchange="doSearch()">
+      <option value="">全部分类</option>
+      <option value="00-总览">总览与核心数据</option>
+      <option value="01-地理与自然环境">地理与自然环境</option>
+      <option value="02-历史沿革">历史沿革</option>
+      <option value="03-行政区划">行政区划</option>
+      <option value="04-人口与民族">人口与民族</option>
+      <option value="05-经济发展">经济发展</option>
+      <option value="06-文化旅游">文化旅游</option>
+      <option value="07-特产与资源">特产与资源</option>
+      <option value="08-交通与基础设施">交通与基础设施</option>
+      <option value="09-政策与治理">政策与治理</option>
+      <option value="10-社会民生">社会民生</option>
+      <option value="synthesis">跨分类合成</option>
+      <option value="ai-hub">AI创作赋能</option>
+    </select>
+    <select id="filterMode" onchange="doSearch()">
+      <option value="hybrid">混合搜索</option>
+      <option value="fulltext">全文搜索</option>
+      <option value="semantic">语义搜索</option>
+    </select>
+  </div>
+
+  <div id="results"></div>
+  <div class="pagination" id="pagination"></div>
+</div>
+
+<script>
+const API_BASE = '/api/v1';
+let currentPage = 1;
+let totalPages = 1;
+
+// 从 URL 参数读取搜索词
+const urlParams = new URLSearchParams(location.search);
+const initQuery = urlParams.get('q') || '';
+const initCategory = urlParams.get('category') || '';
+if (initQuery) document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('searchInput').value = initQuery;
+  if (initCategory) document.getElementById('filterCategory').value = initCategory;
+  doSearch();
+});
+
+function doSearch(page) {
+  if (page) currentPage = page;
+  const query = document.getElementById('searchInput').value.trim();
+  if (!query) {
+    document.getElementById('results').innerHTML = '<div class="empty"><p>请输入搜索关键词</p></div>';
+    return;
+  }
+
+  document.getElementById('results').innerHTML = '<div class="empty"><p>搜索中...</p></div>';
+
+  const category = document.getElementById('filterCategory').value;
+  const mode = document.getElementById('filterMode').value;
+  const body = { query, page: currentPage, page_size: 10, search_mode: mode };
+  if (category) body.category = category;
+
+  fetch(API_BASE + '/search', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-API-Key': 'wskb-dev-key' },
+    body: JSON.stringify(body)
+  })
+  .then(r => r.json())
+  .then(d => {
+    const results = d.results || [];
+    if (results.length === 0) {
+      document.getElementById('results').innerHTML = '<div class="empty"><p>未找到匹配结果</p><p style="font-size:14px">试试换个关键词，或调整分类筛选</p></div>';
+      document.getElementById('pagination').innerHTML = '';
+      return;
+    }
+    document.getElementById('results').innerHTML = results.map(r => `
+      <div class="result-item" onclick="location.href='note.html?slug=${encodeURIComponent(r.note.slug)}'">
+        <h3>${r.note.title}</h3>
+        <div class="snippet">${r.snippet || ''}</div>
+        <div class="meta">
+          <span>${r.note.category||''}</span>
+          <span>${r.note.view_count||0} 浏览</span>
+          <span class="score">${r.match_type || ''} · 相关度: ${(r.score*100).toFixed(0)}%</span>
+        </div>
+      </div>
+    `).join('');
+
+    if (d.pagination) {
+      totalPages = d.pagination.total_pages;
+      renderPagination();
+    }
+  })
+  .catch(err => {
+    console.error(err);
+    // 模拟数据回退
+    const mockResults = [
+      { note: { title: '文山三七产业深度报告', slug: '文山三七产业深度报告', category: '特产与资源', view_count: 980 }, snippet: '文山三七产量占全国90%以上，种植面积超60万亩，综合产值突破200亿元...', score: 0.92, match_type: 'mock' },
+      { note: { title: '普者黑旅游攻略', slug: '普者黑旅游攻略', category: '文化旅游', view_count: 1523 }, snippet: '普者黑国家5A级景区，312座孤峰、54个湖泊、83个溶洞...', score: 0.85, match_type: 'mock' },
+    ].filter(r => r.note.title.includes(query) || r.snippet.includes(query));
+    document.getElementById('results').innerHTML = mockResults.length ? mockResults.map(r => `
+      <div class="result-item" onclick="location.href='note.html?slug=${encodeURIComponent(r.note.slug)}'">
+        <h3>${r.note.title}</h3>
+        <div class="snippet">${r.snippet}</div>
+        <div class="meta">
+          <span>${r.note.category}</span><span>${r.note.view_count} 浏览</span>
+          <span class="score">${r.match_type} · 相关度: ${(r.score*100).toFixed(0)}%</span>
+        </div>
+      </div>`).join('') : '<div class="empty"><p>未找到匹配结果</p><p style="font-size:14px">后端未启动，显示模拟数据。</p></div>';
+    document.getElementById('pagination').innerHTML = '';
+  });
+}
+
+function renderPagination() {
+  let html = '';
+  for (let i = 1; i <= totalPages; i++) {
+    html += `<button class="${i === currentPage ? 'active' : ''}" onclick="doSearch(${i})">${i}</button>`;
+  }
+  document.getElementById('pagination').innerHTML = html;
+}
+</script>
+</body>
+</html>

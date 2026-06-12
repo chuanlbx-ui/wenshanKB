@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>P3-知识图谱可视化报告 — 文山州知识库</title>
+<link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+<nav class="top-nav">
+  <div class="nav-inner">
+    <a href="../index.html" class="nav-brand">文山州知识库</a>
+    <div class="nav-links">
+      <a href="../index.html">首页</a>
+      <a href="../categories.html">分类浏览</a>
+      <a href="../knowledge-graph.html">知识图谱</a>
+      <input type="text" class="nav-search" placeholder="搜索笔记..." id="navSearch" onkeyup="doSearch(this.value)">
+    </div>
+  </div>
+</nav>
+<div class="search-results" id="searchResults" style="display:none"></div>
+
+<div class="content-wrapper note-page">
+<nav class="breadcrumb"><a href="../index.html">首页</a> / Wiki / P3-知识图谱可视化报告</nav>
+<article>
+<header class="note-header"><h1>P3-知识图谱可视化报告</h1></header>
+<div class="note-body"><h1>P3-知识图谱可视化报告</h1>
+
+<p>生成时间：2026-05-24</p>
+
+<hr>
+
+<h2>执行摘要</h2>
+
+<p>基于 D:\WenShanKB 全部 74 篇笔记及已补全的 <a href="notes/wiki/双向链接.html" class="wikilink">双向链接</a>，使用 D3.js 生成了可交互的力导向知识图谱，保存为独立 HTML 文件。</p>
+
+<hr>
+
+<h2>图谱统计</h2>
+
+<div class="table-wrap"><table><thead>
+<tr><th>指标</th><th>数值</th></tr>
+</thead><tbody>
+<tr><td>总节点数</td><td>74</td></tr>
+<tr><td>总边数</td><td>128</td></tr>
+<tr><td>平均度数</td><td>3.5</td></tr>
+<tr><td>分类数</td><td>16</td></tr>
+<tr><td>最大入度</td><td>8</td></tr>
+</tbody></table>
+
+<hr>
+
+<h2>核心节点（入度 Top 10）</h2>
+
+<div class="table-wrap"><table><thead>
+<tr><th>排名</th><th>节点</th><th>分类</th><th>入度</th></tr>
+</thead><tbody>
+<tr><td>1</td><td>生态环境深度</td><td>10-社会民生</td><td>8</td></tr>
+<tr><td>2</td><td>经济概况2025</td><td>05-经济发展</td><td>7</td></tr>
+<tr><td>3</td><td>文旅体育深度</td><td>10-社会民生</td><td>7</td></tr>
+<tr><td>4</td><td>文旅深度报告</td><td>06-文化旅游</td><td>6</td></tr>
+<tr><td>5</td><td>生态文明建设报告</td><td>09-政策与治理</td><td>5</td></tr>
+<tr><td>6</td><td>教育深度</td><td>10-社会民生</td><td>5</td></tr>
+<tr><td>7</td><td>教育深度报告</td><td>10-社会民生</td><td>5</td></tr>
+<tr><td>8</td><td>非遗与传统文化</td><td>04-人口与民族</td><td>4</td></tr>
+<tr><td>9</td><td>十五五规划</td><td>09-政策与治理</td><td>4</td></tr>
+<tr><td>10</td><td>文山市教育医疗</td><td>10-社会民生</td><td>4</td></tr>
+</tbody></table>
+
+<hr>
+
+<h2>各分类节点分布</h2>
+
+<div class="table-wrap"><table><thead>
+<tr><th>分类</th><th>节点数</th><th>颜色</th></tr>
+</thead><tbody>
+<tr><td>00-总览</td><td>2</td><td>红色 #ff6b6b</td></tr>
+<tr><td>01-地理与自然环境</td><td>3</td><td>青绿 #4ecdc4</td></tr>
+<tr><td>01-总览</td><td>1</td><td>红色（同总览）</td></tr>
+<tr><td>02-历史沿革</td><td>2</td><td>紫色 #a29bfe</td></tr>
+<tr><td>03-行政区划</td><td>9</td><td>黄色 #ffe66d</td></tr>
+<tr><td>04-人口与民族</td><td>5</td><td>粉色 #ff9ff3</td></tr>
+<tr><td>05-经济发展</td><td>9</td><td>蓝色 #54a0ff</td></tr>
+<tr><td>06-文化旅游</td><td>7</td><td>深紫 #5f27cd</td></tr>
+<tr><td>07-特产与资源</td><td>4</td><td>深青 #01a3a4</td></tr>
+<tr><td>08-交通与基础设施</td><td>3</td><td>橙色 #feca57</td></tr>
+<tr><td>09-政策与治理</td><td>6</td><td>橙红 #ff6348</td></tr>
+<tr><td>10-社会民生</td><td>9</td><td>绿色 #2ed573</td></tr>
+<tr><td>root</td><td>4</td><td>灰色 #7f8c8d</td></tr>
+<tr><td>wiki/entities</td><td>5</td><td>品红 #e056a0</td></tr>
+<tr><td>wiki/topics</td><td>4</td><td>深玫红 #c44569</td></tr>
+</tbody></table>
+
+<hr>
+
+<h2>可视化特性</h2>
+
+<div class="table-wrap"><table><thead>
+<tr><th>特性</th><th>状态</th></tr>
+</thead><tbody>
+<tr><td>力导向布局 (D3 force)</td><td>✅</td></tr>
+<tr><td>节点按分类着色（16 色）</td><td>✅</td></tr>
+<tr><td>节点大小按入度缩放</td><td>✅</td></tr>
+<tr><td>连线表示 <a href="notes/wiki/双向链接.html" class="wikilink">双向链接</a></td><td>✅</td></tr>
+<tr><td>鼠标悬停高亮邻域</td><td>✅</td></tr>
+<tr><td>拖拽节点</td><td>✅</td></tr>
+<tr><td>缩放/平移</td><td>✅</td></tr>
+<tr><td>点击显示详情面板（文件名/分类/标签/引用列表）</td><td>✅</td></tr>
+<tr><td>图例（左上角）</td><td>✅</td></tr>
+<tr><td>搜索框（右上角）</td><td>✅</td></tr>
+<tr><td>统计面板（底部）</td><td>✅</td></tr>
+<tr><td>深色科技风主题</td><td>✅</td></tr>
+<tr><td>中文界面</td><td>✅</td></tr>
+<tr><td>响应式布局</td><td>✅</td></tr>
+<tr><td>零外部依赖（CDN D3.js）</td><td>✅</td></tr>
+</tbody></table>
+
+<hr>
+
+<h2>产出文件</h2>
+
+<ul>
+<li><strong>知识图谱</strong>：<code>wiki/knowledge-graph.html</code>（独立 HTML，浏览器直接打开即可使用）</li>
+</ul>
+
+<hr>
+
+<h2>分析观察</h2>
+
+<ol>
+<li><strong>社会民生类笔记关联最密集</strong>：入度 Top 10 中 10-社会民生占了 4 席（生态环境深度、文旅体育深度、教育深度、教育深度报告），反映该分类内部互相链接最为充分。</li>
+</ul>
+
+<ol>
+<li><strong>经济概况2025 是跨分类枢纽</strong>：被 05-经济发展、09-政策与治理、10-社会民生、06-文化旅游等多个分类引用，入度 7，是知识库的核心数据节点。</li>
+</ul>
+
+<ol>
+<li><strong>文旅深度报告（入度 6）</strong>：作为文旅类综合报告，被所有景点笔记引用，承担了文旅分类内的信息汇聚角色。</li>
+</ul>
+
+<ol>
+<li><strong>部分分类节点偏少</strong>：02-历史沿革（2篇）、01-地理与自然环境（3篇）、08-交通与基础设施（3篇）节点较少，后续可考虑增补内容。</li>
+</ul></div>
+</article>
+</div>
+
+<script src="../assets/search.js"></script>
+</body>
+</html>

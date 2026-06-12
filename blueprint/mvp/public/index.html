@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>文山州知识库 · 公共知识服务平台</title>
+<style>
+:root {
+  --primary: #2d5a27;
+  --primary-light: #3a7a32;
+  --bg: #fafaf5;
+  --card-bg: #fff;
+  --text: #1a1a2e;
+  --text-secondary: #6b7280;
+  --border: #e5e7eb;
+  --accent: #d4a373;
+  --radius: 10px;
+  --shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+/* Header */
+.site-header { background: linear-gradient(135deg, var(--primary) 0%, #1a3a16 100%); color: #fff; padding: 60px 20px; text-align: center; }
+.site-header h1 { font-size: 36px; margin-bottom: 12px; letter-spacing: 2px; }
+.site-header p { font-size: 16px; opacity: .85; max-width: 600px; margin: 0 auto; }
+.header-stats { display: flex; justify-content: center; gap: 40px; margin-top: 24px; }
+.header-stat { text-align: center; }
+.header-stat .num { font-size: 32px; font-weight: 700; }
+.header-stat .label { font-size: 13px; opacity: .7; margin-top: 4px; }
+/* Navigation */
+nav { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 0 20px; position: sticky; top: 0; z-index: 10; box-shadow: 0 1px 3px rgba(0,0,0,.05); }
+.nav-inner { max-width: 1100px; margin: 0 auto; display: flex; gap: 32px; }
+nav a { display: block; padding: 14px 4px; color: var(--text-secondary); text-decoration: none; font-size: 14px; border-bottom: 2px solid transparent; transition: all .2s; }
+nav a:hover, nav a.active { color: var(--primary); border-bottom-color: var(--primary); }
+/* Layout */
+.container { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
+.section-title { font-size: 22px; margin-bottom: 20px; color: var(--text); padding-bottom: 8px; border-bottom: 2px solid var(--accent); }
+/* Category Grid */
+.cat-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.cat-card { background: var(--card-bg); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); transition: transform .2s, box-shadow .2s; cursor: pointer; }
+.cat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,.1); }
+.cat-card h3 { color: var(--primary); margin-bottom: 8px; font-size: 18px; }
+.cat-card p { color: var(--text-secondary); font-size: 14px; }
+.cat-card .count { display: inline-block; margin-top: 8px; font-size: 12px; color: var(--accent); }
+/* Featured */
+.featured-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.featured-card { background: var(--card-bg); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); border-left: 3px solid var(--primary); }
+.featured-card h4 { font-size: 16px; margin-bottom: 6px; }
+.featured-card p { font-size: 13px; color: var(--text-secondary); margin-bottom: 8px; }
+.featured-card .meta { font-size: 12px; color: var(--accent); display: flex; gap: 12px; }
+/* Footer */
+footer { background: var(--primary); color: rgba(255,255,255,.8); text-align: center; padding: 24px; font-size: 13px; margin-top: 40px; }
+/* Search bar on home */
+.search-hero { text-align: center; padding: 20px 0 40px; }
+.search-hero input { width: 100%; max-width: 500px; padding: 12px 20px; border: 2px solid var(--border); border-radius: 24px; font-size: 15px; }
+.search-hero input:focus { outline: none; border-color: var(--primary); }
+.search-hero button { margin-left: 8px; padding: 12px 28px; border: none; border-radius: 24px; background: var(--primary); color: #fff; font-size: 15px; cursor: pointer; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <h1>文山州知识库</h1>
+  <p>AI 创作公共知识服务平台 —— 让每个人都能用 AI 讲好文山故事</p>
+  <div class="header-stats">
+    <div class="header-stat"><div class="num">121</div><div class="label">知识笔记</div></div>
+    <div class="header-stat"><div class="num">13</div><div class="label">主题分类</div></div>
+    <div class="header-stat"><div class="num">30</div><div class="label">素材卡片</div></div>
+    <div class="header-stat"><div class="num">25+</div><div class="label">Prompt 模板</div></div>
+  </div>
+</header>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="active">首页</a>
+    <a href="search.html">搜索</a>
+    <a href="ai-tools.html">AI 创作工具</a>
+  </div>
+</nav>
+
+<div class="container">
+  <!-- 搜索入口 -->
+  <div class="search-hero">
+    <form action="search.html" method="get">
+      <input type="text" name="q" placeholder="搜索文山知识库——三七、普者黑、经济发展...">
+      <button type="submit">搜索</button>
+    </form>
+  </div>
+
+  <!-- 主题分类 -->
+  <h2 class="section-title">主题分类</h2>
+  <div class="cat-grid" id="catGrid"></div>
+
+  <!-- 热门内容 -->
+  <h2 class="section-title" style="margin-top:40px">热门内容</h2>
+  <div class="featured-grid" id="featuredGrid"></div>
+
+  <!-- AI 创作中心入口 -->
+  <h2 class="section-title" style="margin-top:40px">AI 创作赋能</h2>
+  <div class="cat-grid">
+    <div class="cat-card" onclick="location.href='ai-tools.html'">
+      <h3>提示词库</h3>
+      <p>6 大场景 25+ 即用型 Prompt 模板，覆盖政务宣传、文旅推广、农产品带货等</p>
+      <span class="count">25+ 模板</span>
+    </div>
+    <div class="cat-card" onclick="location.href='ai-tools.html#materials'">
+      <h3>素材卡片集</h3>
+      <p>30 张高价值数据卡片，覆盖经济/文旅/特产/文化/历史/人物</p>
+      <span class="count">30 张卡片</span>
+    </div>
+    <div class="cat-card" onclick="location.href='ai-tools.html#compliance'">
+      <h3>合规检查</h3>
+      <p>边境/民族/军事/广告/版权/数据 六个维度自动审查</p>
+      <span class="count">一键检测</span>
+    </div>
+  </div>
+</div>
+
+<footer>
+  文山州 AI 创作公共知识库 · WenShanKB v0.1.0<br>
+  基于 Obsidian 知识库构建 · 服务于文山州互联网协会
+</footer>
+
+<script>
+const API_BASE = '/api/v1';
+// 分类列表
+const categories = [
+  { name: '00-总览', display: '总览与核心数据', desc: '知识库总索引、核心数据速查' },
+  { name: '01-地理与自然环境', display: '地理与自然环境', desc: '喀斯特地貌、气候、水文、矿产' },
+  { name: '02-历史沿革', display: '历史沿革', desc: '从先秦句町古国到现代文山的变迁' },
+  { name: '03-行政区划', display: '行政区划', desc: '1市7县、104个乡镇的行政格局' },
+  { name: '04-人口与民族', display: '人口与民族', desc: '壮苗彝瑶等11个世居民族的人口分布' },
+  { name: '05-经济发展', display: '经济发展', desc: '三七产业、铝工业、口岸贸易、GDP趋势' },
+  { name: '06-文化旅游', display: '文化旅游', desc: '普者黑、坝美、老山圣地、民族节庆' },
+  { name: '07-特产与资源', display: '特产与资源', desc: '三七、辣椒、八宝米、草果等特色农产品' },
+  { name: '08-交通与基础设施', display: '交通与基础设施', desc: '高铁、高速、机场、水利、电网' },
+  { name: '09-政策与治理', display: '政策与治理', desc: '政府工作报告、乡村振兴、边境治理' },
+  { name: '10-社会民生', display: '社会民生', desc: '教育、医疗、就业、住房、社保' },
+  { name: 'synthesis', display: '跨分类合成笔记', desc: '经济全景、文旅地图、发展时间线' },
+  { name: 'ai-hub', display: 'AI创作赋能中心', desc: '提示词库、素材卡片、风格指南、合规指南' },
+];
+
+document.getElementById('catGrid').innerHTML = categories.map(c =>
+  `<div class="cat-card" onclick="location.href='search.html?category=${encodeURIComponent(c.name)}'">
+    <h3>${c.display}</h3><p>${c.desc}</p><span class="count">${c.name}</span>
+  </div>`
+).join('');
+
+// 加载热门内容
+fetch(API_BASE + '/notes?page_size=6')
+  .then(r => r.json())
+  .then(d => {
+    const notes = d.notes || [];
+    document.getElementById('featuredGrid').innerHTML = notes.map(n =>
+      `<div class="featured-card" onclick="location.href='note.html?slug=${encodeURIComponent(n.slug)}'" style="cursor:pointer">
+        <h4>${n.title}</h4>
+        <p>${(n.excerpt || '').substring(0, 120)}...</p>
+        <div class="meta"><span>${n.category||''}</span><span>${n.view_count||0} 浏览</span></div>
+      </div>`
+    ).join('') || '<p style="color:var(--text-secondary)">正在加载...</p>';
+  })
+  .catch(() => {
+    document.getElementById('featuredGrid').innerHTML = '<p style="color:var(--text-secondary)">后端未启动，显示示例数据</p>';
+  });
+</script>
+</body>
+</html>

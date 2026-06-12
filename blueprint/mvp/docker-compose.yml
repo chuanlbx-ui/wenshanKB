@@ -1,0 +1,56 @@
+services:
+  # ── PostgreSQL + pgvector ──
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_DB: wenshankb
+      POSTGRES_USER: wskb_user
+      POSTGRES_PASSWORD: wskb_secret_2025
+    ports:
+      - "5434:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db_schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U wskb_user -d wenshankb"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  # ── FastAPI 后端 ──
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    environment:
+      DATABASE_URL: postgresql+asyncpg://wskb_user:wskb_secret_2025@db:5432/wenshankb
+      DATABASE_URL_SYNC: postgresql://wskb_user:wskb_secret_2025@db:5432/wenshankb
+      AGENT_API_KEY: wskb-dev-key
+      SECRET_KEY: wskb-jwt-secret-change-in-production
+      LOG_LEVEL: info
+      CORS_ORIGINS: "*"
+    ports:
+      - "8001:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    volumes:
+      - ./app.py:/app/app.py:ro
+
+  # ── Nginx 前端 ──
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "8081:80"
+    volumes:
+      - ./public:/usr/share/nginx/html/public:ro
+      - ./admin:/usr/share/nginx/html/admin:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - api
+    restart: unless-stopped
+
+volumes:
+  pgdata:

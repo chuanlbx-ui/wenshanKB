@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>知识图谱 — 文山州知识库</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<nav class="top-nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">文山州知识库</a>
+    <div class="nav-links">
+      <a href="index.html">首页</a>
+      <a href="categories.html">分类浏览</a>
+      <a href="knowledge-graph.html" class="active">知识图谱</a>
+      <input type="text" class="nav-search" placeholder="搜索笔记..." id="navSearch" onkeyup="doSearch(this.value)">
+    </div>
+  </div>
+</nav>
+<div class="search-results" id="searchResults" style="display:none"></div>
+
+<div class="content-wrapper">
+<header class="page-header">
+  <h1>知识图谱</h1>
+  <p>文山州知识库笔记关系网络</p>
+</header>
+
+<div class="graph-placeholder">
+  <div class="graph-info">
+    <h2>图谱概览</h2>
+    <p>89 篇笔记通过 <strong>[[双向链接]]</strong> 互相连接，形成知识网络。</p>
+    <p>图谱可视化需要浏览器支持 Canvas/SVG，当前展示为列表视图。</p>
+  </div>
+</div>
+</div>
+
+<script src="assets/search.js"></script>
+</body>
+</html>

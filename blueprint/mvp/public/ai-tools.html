@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI 创作工具 · 文山州知识库</title>
+<style>
+:root {
+  --primary: #2d5a27; --primary-light: #3a7a32; --bg: #fafaf5; --card-bg: #fff;
+  --text: #1a1a2e; --text-secondary: #6b7280; --border: #e5e7eb; --accent: #d4a373;
+  --radius: 10px; --shadow: 0 2px 8px rgba(0,0,0,.06);
+  --danger: #dc2626; --success: #16a34a; --warning: #f59e0b;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: -apple-system, "Microsoft YaHei", sans-serif; background: var(--bg); color: var(--text); }
+nav { background: var(--card-bg); border-bottom: 1px solid var(--border); padding: 0 20px; position: sticky; top: 0; z-index: 10; }
+.nav-inner { max-width: 1100px; margin: 0 auto; display: flex; gap: 32px; align-items: center; }
+.nav-inner .logo { font-weight: 700; color: var(--primary); font-size: 18px; text-decoration: none; padding: 14px 0; }
+nav a { display: block; padding: 14px 4px; color: var(--text-secondary); text-decoration: none; font-size: 14px; border-bottom: 2px solid transparent; }
+nav a:hover, nav a.active { color: var(--primary); border-bottom-color: var(--primary); }
+.container { max-width: 1100px; margin: 0 auto; padding: 32px 20px; }
+/* Tabs */
+.tabs { display: flex; gap: 4px; margin-bottom: 24px; border-bottom: 2px solid var(--border); }
+.tab { padding: 10px 20px; cursor: pointer; font-size: 15px; color: var(--text-secondary); border-bottom: 2px solid transparent; margin-bottom: -2px; transition: all .2s; }
+.tab.active { color: var(--primary); border-bottom-color: var(--primary); font-weight: 600; }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+/* Prompt */
+.prompt-card { background: var(--card-bg); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; box-shadow: var(--shadow); }
+.prompt-card h3 { font-size: 17px; margin-bottom: 8px; }
+.prompt-card .meta { font-size: 12px; color: var(--accent); margin-bottom: 12px; }
+.prompt-card pre { background: #1e1e2e; color: #d6d6d6; padding: 16px; border-radius: var(--radius); overflow-x: auto; font-size: 13px; max-height: 300px; overflow-y: auto; white-space: pre-wrap; }
+.prompt-card .actions { margin-top: 12px; display: flex; gap: 8px; }
+.btn { padding: 8px 16px; border: none; border-radius: var(--radius); font-size: 13px; cursor: pointer; font-weight: 500; }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-primary:hover { background: var(--primary-light); }
+.btn-outline { background: transparent; border: 1px solid var(--border); }
+.btn-outline:hover { background: var(--bg); }
+.copied { color: var(--success); font-size: 12px; margin-left: 8px; display: none; }
+/* Scenario filter */
+.scenario-filter { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+.scenario-filter button { padding: 6px 14px; border: 1px solid var(--border); border-radius: 16px; background: var(--card-bg); cursor: pointer; font-size: 13px; }
+.scenario-filter button.active { background: var(--primary); color: #fff; border-color: var(--primary); }
+/* Materials */
+.material-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px; }
+.material-card { background: var(--card-bg); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); border-top: 3px solid var(--accent); }
+.material-card h3 { font-size: 16px; margin-bottom: 8px; }
+.material-card .data { font-size: 14px; color: var(--text-secondary); margin-bottom: 12px; }
+.material-card .tags { display: flex; gap: 6px; flex-wrap: wrap; }
+.material-card .tag { padding: 2px 8px; border-radius: 12px; font-size: 11px; background: #fff7ed; color: #c2410c; }
+/* Compliance */
+.compliance-box { background: var(--card-bg); border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); }
+.compliance-box textarea { width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; font-family: inherit; min-height: 180px; resize: vertical; }
+.compliance-box textarea:focus { outline: none; border-color: var(--primary); }
+.compliance-options { display: flex; gap: 12px; align-items: center; margin: 12px 0; flex-wrap: wrap; }
+.compliance-options select, .compliance-options label { font-size: 13px; }
+.compliance-result { margin-top: 16px; padding: 16px; border-radius: var(--radius); border-left: 4px solid var(--border); }
+.compliance-result.pass { background: #f0fdf4; border-left-color: var(--success); }
+.compliance-result.fail { background: #fef2f2; border-left-color: var(--danger); }
+.compliance-result .score { font-size: 32px; font-weight: 700; }
+.compliance-result .score.pass { color: var(--success); }
+.compliance-result .score.fail { color: var(--danger); }
+.issue-item { padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+.issue-item .severity-high { color: var(--danger); font-weight: 600; }
+.issue-item .severity-medium { color: var(--warning); }
+.issue-item .severity-low { color: var(--text-secondary); }
+/* Toast */
+.toast { position: fixed; top: 20px; right: 20px; padding: 10px 18px; border-radius: var(--radius); color: #fff; font-size: 14px; z-index: 200; animation: slideIn .3s; }
+.toast-success { background: var(--success); }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="logo">文山州知识库</a>
+    <a href="index.html">首页</a>
+    <a href="search.html">搜索</a>
+    <a href="ai-tools.html" class="active">AI 创作工具</a>
+  </div>
+</nav>
+
+<div class="container">
+  <!-- Tabs -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('prompts')">提示词库</div>
+    <div class="tab" onclick="switchTab('materials')">素材卡片</div>
+    <div class="tab" onclick="switchTab('compliance')">合规检查</div>
+  </div>
+
+  <!-- Tab 1: 提示词库 -->
+  <div id="tab-prompts" class="tab-content active">
+    <div class="scenario-filter" id="scenarioBtns">
+      <button class="active" onclick="filterPrompts('all')">全部</button>
+      <button onclick="filterPrompts('政务宣传')">政务宣传</button>
+      <button onclick="filterPrompts('文旅推广')">文旅推广</button>
+      <button onclick="filterPrompts('农产品带货')">农产品带货</button>
+      <button onclick="filterPrompts('民族文化')">民族文化</button>
+      <button onclick="filterPrompts('新闻通讯')">新闻通讯</button>
+      <button onclick="filterPrompts('乡土故事')">乡土故事</button>
+    </div>
+    <div id="promptsList"></div>
+  </div>
+
+  <!-- Tab 2: 素材卡片 -->
+  <div id="tab-materials" class="tab-content">
+    <div class="scenario-filter" id="materialCatBtns">
+      <button class="active" onclick="filterMaterials('all')">全部</button>
+      <button onclick="filterMaterials('经济数据')">经济数据</button>
+      <button onclick="filterMaterials('旅游亮点')">旅游亮点</button>
+      <button onclick="filterMaterials('特产卖点')">特产卖点</button>
+      <button onclick="filterMaterials('民族文化')">民族文化</button>
+      <button onclick="filterMaterials('历史事件')">历史事件</button>
+      <button onclick="filterMaterials('人物故事')">人物故事</button>
+    </div>
+    <div class="material-grid" id="materialsList"></div>
+  </div>
+
+  <!-- Tab 3: 合规检查 -->
+  <div id="tab-compliance" class="tab-content">
+    <div class="compliance-box">
+      <h3 style="margin-bottom:12px">内容合规检查</h3>
+      <p style="color:var(--text-secondary);font-size:13px;margin-bottom:12px">
+        自动检查文本在边境、民族、军事、广告法、数据准确性、版权六个维度的合规性
+      </p>
+      <textarea id="complianceInput" placeholder="粘贴需要检查的文本内容..."></textarea>
+      <div class="compliance-options">
+        <select id="contentType">
+          <option value="通用">内容类型：通用</option>
+          <option value="政务宣传">政务宣传</option>
+          <option value="文旅推广">文旅推广</option>
+          <option value="农产品带货">农产品带货</option>
+          <option value="民族文化">民族文化</option>
+          <option value="新闻通讯">新闻通讯</option>
+          <option value="乡土故事">乡土故事</option>
+        </select>
+        <button class="btn btn-primary" onclick="doCompliance()">开始检查</button>
+      </div>
+      <div id="complianceResult"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+const API_BASE = '/api/v1';
+let allPrompts = [];
+let allMaterials = [];
+let currentTab = 'prompts';
+let currentScenario = 'all';
+let currentMatCat = 'all';
+
+// ── Tabs ──
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+  document.querySelector(`.tab:nth-child(${tab==='prompts'?1:tab==='materials'?2:3})`).classList.add('active');
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'prompts') loadPrompts();
+  else if (tab === 'materials') loadMaterials();
+}
+
+// ── 提示词库 ──
+function loadPrompts() {
+  fetch(API_BASE + '/prompts?scenario=政务宣传', { headers: { 'X-API-Key': 'wskb-dev-key' } })
+    .then(r => r.json())
+    .then(d => { allPrompts = d.templates || []; renderPrompts(); })
+    .catch(() => {
+      // Mock data
+      allPrompts = [
+        { id: 1, scenario: '政务宣传', sub_scenario: '政府工作报告解读', title: '政府工作报告解读 Prompt',
+          template_content: '你是一位文山州政府政策研究员。请基于以下数据，撰写一篇面向群众的政府工作报告解读...',
+          negative_prompts: ['不使用政治敏感词汇', '不引用未公开数据'], suggested_cards: ['卡01', '卡02'], related_style: '政务风格' },
+        { id: 2, scenario: '文旅推广', sub_scenario: '普者黑种草文案', title: '普者黑小红书种草 Prompt',
+          template_content: '你是一位文山旅游博主。请为普者黑写一篇吸引年轻人的种草文案...',
+          negative_prompts: ['不夸大景区设施', '不使用"最好""第一"等绝对词'], suggested_cards: ['卡07'], related_style: '文旅风格' },
+        { id: 3, scenario: '农产品带货', sub_scenario: '三七带货脚本', title: '三七直播带货口播 Prompt',
+          template_content: '你是文山三七带货主播。文山三七产量占全国90%以上...',
+          negative_prompts: ['严禁宣称三七"治疗"疾病', '不使用绝对化用语'], suggested_cards: ['卡03', '卡11'], related_style: '带货风格' },
+        { id: 4, scenario: '民族文化', sub_scenario: '壮族文化科普', title: '壮族三月三文化科普',
+          template_content: '你是一位文山民族文化学者。请介绍壮族"三月三"节日的起源、习俗和文化内涵...',
+          negative_prompts: ['不使用"落后""迷信"等词汇', '不使用"原始"描述民族'], suggested_cards: ['卡18', '卡19'], related_style: '民族文化风格' },
+        { id: 5, scenario: '新闻通讯', sub_scenario: '活动新闻稿', title: '文山重大活动新闻稿',
+          template_content: '你是一位文山日报记者。请撰写一篇关于文山州[活动名称]的新闻通讯稿...',
+          negative_prompts: ['不泄露军事敏感信息', '不包含未经核实的数据'], suggested_cards: [], related_style: '新闻风格' },
+      ];
+      renderPrompts();
+    });
+}
+
+function filterPrompts(scenario) {
+  currentScenario = scenario;
+  document.querySelectorAll('#scenarioBtns button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  renderPrompts();
+}
+
+function renderPrompts() {
+  const filtered = currentScenario === 'all' ? allPrompts : allPrompts.filter(p => p.scenario === currentScenario);
+  document.getElementById('promptsList').innerHTML = filtered.length ? filtered.map(p => `
+    <div class="prompt-card">
+      <h3>${p.title}</h3>
+      <div class="meta">场景: ${p.scenario} · ${p.sub_scenario||''} · 风格: ${p.related_style||''}</div>
+      <pre>${p.template_content}</pre>
+      ${p.negative_prompts.length ? `<div style="font-size:12px;color:var(--danger);margin-top:8px">负面提示词: ${p.negative_prompts.join('; ')}</div>` : ''}
+      ${p.suggested_cards.length ? `<div style="font-size:12px;color:var(--accent);margin-top:4px">推荐素材: ${p.suggested_cards.join(', ')}</div>` : ''}
+      <div class="actions">
+        <button class="btn btn-primary" onclick="copyPrompt(this, '${p.id}')">一键复制</button>
+        <span class="copied" id="copied-${p.id}">已复制!</span>
+      </div>
+    </div>
+  `).join('') : '<p style="color:var(--text-secondary);text-align:center;padding:40px">该场景暂无模板</p>';
+}
+
+function copyPrompt(btn, id) {
+  const card = btn.closest('.prompt-card');
+  const text = card.querySelector('pre').textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const copied = document.getElementById('copied-' + id);
+    if (copied) { copied.style.display = 'inline'; setTimeout(() => copied.style.display = 'none', 2000); }
+    toast('Prompt 已复制到剪贴板');
+  });
+}
+
+// ── 素材卡片 ──
+function loadMaterials() {
+  fetch(API_BASE + '/materials?limit=30', { headers: { 'X-API-Key': 'wskb-dev-key' } })
+    .then(r => r.json())
+    .then(d => { allMaterials = d.cards || []; renderMaterials(); })
+    .catch(() => {
+      allMaterials = [
+        { id: '卡03', title: '"金不换"——文山三七', core_data: '文山三七产量占全国90%以上，种植面积超60万亩...', category: '特产卖点', applicable_scenarios: ['农产品带货','健康科普'] },
+        { id: '卡07', title: '普者黑——喀斯特奇迹', core_data: '国家5A级景区，312座孤峰、83个溶洞、54个湖泊...', category: '旅游亮点', applicable_scenarios: ['旅游推荐','短视频脚本'] },
+        { id: '卡01', title: '文山州 GDP 2025', core_data: '2025年全州GDP达xxx亿元，同比增长x%，三次产业结构...', category: '经济数据', applicable_scenarios: ['政务报告','数据分析'] },
+        { id: '卡11', title: '文山辣椒产业', core_data: '丘北辣椒种植面积xxx万亩，年产量xxx吨，远销海内外...', category: '特产卖点', applicable_scenarios: ['农产品带货'] },
+        { id: '卡18', title: '壮族三月三', core_data: '三月三是壮族最隆重的传统节日，文山壮族农历三月初三...', category: '民族文化', applicable_scenarios: ['文化科普','旅游宣传'] },
+        { id: '卡24', title: '句町古国', core_data: '句町古国是战国至汉代存在于滇东南的古老王国...', category: '历史事件', applicable_scenarios: ['文化深度','纪录片脚本'] },
+      ];
+      renderMaterials();
+    });
+}
+
+function filterMaterials(cat) {
+  currentMatCat = cat;
+  document.querySelectorAll('#materialCatBtns button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  renderMaterials();
+}
+
+function renderMaterials() {
+  const filtered = currentMatCat === 'all' ? allMaterials : allMaterials.filter(m => m.category === currentMatCat);
+  document.getElementById('materialsList').innerHTML = filtered.length ? filtered.map(m => `
+    <div class="material-card">
+      <h3>${m.title}</h3>
+      <div class="data">${(m.core_data||'').substring(0,150)}...</div>
+      <div class="tags">
+        <span class="tag">${m.category||''}</span>
+        ${(m.applicable_scenarios||[]).map(s => `<span class="tag">${s}</span>`).join('')}
+      </div>
+    </div>
+  `).join('') : '<p style="color:var(--text-secondary);text-align:center;padding:40px;grid-column:1/-1">该分类暂无素材卡片</p>';
+}
+
+// ── 合规检查 ──
+function doCompliance() {
+  const content = document.getElementById('complianceInput').value.trim();
+  if (!content) return;
+
+  const resultDiv = document.getElementById('complianceResult');
+  resultDiv.innerHTML = '<p style="color:var(--text-secondary)">检查中...</p>';
+
+  fetch(API_BASE + '/compliance/check', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-API-Key': 'wskb-dev-key' },
+    body: JSON.stringify({
+      content,
+      content_type: document.getElementById('contentType').value,
+      check_categories: ['all']
+    })
+  })
+  .then(r => r.json())
+  .then(d => {
+    const passed = d.passed;
+    const score = d.overall_score;
+    resultDiv.innerHTML = `
+      <div class="compliance-result ${passed ? 'pass' : 'fail'}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-weight:600">${passed ? '通过检查' : '发现问题'}</span>
+          <span class="score ${passed ? 'pass' : 'fail'}">${score}分</span>
+        </div>
+        <div style="font-size:13px;color:var(--text-secondary);margin-bottom:12px">
+          已检查: ${(d.passed_checks||[]).join('、')} · 耗时: ${d.check_time_ms}ms
+        </div>
+        ${(d.issues||[]).map(i => `<div class="issue-item"><span class="severity-${i.severity}">[${i.severity==='high'?'严重':i.severity==='medium'?'一般':'提示'}]</span> ${i.category}: ${i.issue} → ${i.suggestion}</div>`).join('')}
+        ${(d.warnings||[]).map(w => `<div class="issue-item"><span class="severity-${w.severity}">[提示]</span> ${w.category}: ${w.issue} → ${w.suggestion}</div>`).join('')}
+        ${((d.issues||[]).length + (d.warnings||[]).length) === 0 ? '<p style="color:var(--success);font-size:14px">未发现合规问题</p>' : ''}
+      </div>
+    `;
+  })
+  .catch(() => {
+    // Local mock check
+    const rules = [
+      [/治疗|治愈|药到病除|包治/g, 'advertising', 'high', '不得使用医疗治疗效果表述', '改为"辅助调理""传统用于"等表述'],
+      [/最好|第一|唯一|最.*的/g, 'advertising', 'high', '不得使用绝对化用语', '替换为"知名""优质"等'],
+      [/争议领土|未定国界/g, 'border', 'high', '不得质疑已划定边界', '使用"中越边境"官方表述'],
+      [/落后.*(壮族|苗族|彝族|瑶族|民族)|原始.*民族/g, 'ethnic', 'high', '不得使用歧视性描述', '改为"传统文化""独特习俗"'],
+    ];
+    const issues = [];
+    rules.forEach(([re, cat, sev, desc, sug]) => {
+      const matches = [...content.matchAll(re)];
+      matches.forEach(m => issues.push({ category: cat, severity: sev, issue: desc, suggestion: sug, location: `位置${m.index}` }));
+    });
+    const score = Math.max(0, 100 - issues.filter(i=>i.severity==='high').length * 15);
+    resultDiv.innerHTML = `
+      <div class="compliance-result ${issues.length ? 'fail' : 'pass'}">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+          <span style="font-weight:600">${issues.length ? '发现问题' : '通过检查'} (本地检查)</span>
+          <span class="score ${issues.length ? 'fail' : 'pass'}">${score}分</span>
+        </div>
+        ${issues.map(i => `<div class="issue-item"><span class="severity-${i.severity}">[${i.severity==='high'?'严重':'提示'}]</span> ${i.category}: ${i.issue} → ${i.suggestion}</div>`).join('')}
+        ${issues.length === 0 ? '<p style="color:var(--success);font-size:14px">未发现合规问题</p>' : ''}
+      </div>
+    `;
+  });
+}
+
+// ── Toast ──
+function toast(msg) {
+  const el = document.createElement('div');
+  el.className = 'toast toast-success';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2000);
+}
+
+// ── Init ──
+loadPrompts();
+</script>
+</body>
+</html>
