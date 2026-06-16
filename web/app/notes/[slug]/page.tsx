@@ -139,6 +139,28 @@ export default function NoteDetailPage() {
         <ReactMarkdown remarkPlugins={[remarkGfm, remarkHeadingIds]} rehypePlugins={[rehypeRaw]}>{processedContent}</ReactMarkdown>
       </div>
 
+      {note.frontmatter?.sources && Array.isArray(note.frontmatter.sources) && note.frontmatter.sources.length > 0 && (
+        <section className="mt-12 pt-8 border-t dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">📚 数据来源</h2>
+          <ul className="space-y-1">
+            {note.frontmatter.sources.map((s: string, i: number) => (
+              <li key={i} className="text-sm text-gray-500 dark:text-gray-400">
+                {s.startsWith('http') ? (
+                  <a href={s} target="_blank" rel="noopener" className="text-blue-500 hover:underline break-all">{s}</a>
+                ) : (
+                  <span>{s}</span>
+                )}
+              </li>
+            ))}
+          </ul>
+          {note.created_at && (
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-3">
+              创建于 {new Date(note.created_at).toLocaleDateString("zh-CN")}
+            </p>
+          )}
+        </section>
+      )}
+
       {related.length > 0 && (
         <section className="mt-16 pt-8 border-t">
           <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">📎 相关笔记</h2>
