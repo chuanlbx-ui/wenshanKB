@@ -120,6 +120,42 @@ async def review_draft(body: ReviewAction, db: AsyncSession = Depends(get_db)):
     return {"slug": body.slug, "action": body.action, "new_status": new_status}
 
 
+@router.get("/graph")
+async def knowledge_graph(db: AsyncSession = Depends(get_db)):
+    """知识图谱：返回节点和边数据，用于可视化"""
+    # 节点：前 100 篇有最多连接的文章
+    result = await db.execute(text("""
+        SELECT n.slug, n.title, c.display_name AS category, n.view_count,
+               (SELECT COUNT(*) FROM note_links nl WHERE nl.source_note_id = n.id OR nl.target_note_id = n.id) AS link_count
+        FROM notes n
+        LEFT JOIN categories c ON n.category_id = c.id
+        WHERE n.status = 'published'
+        ORDER BY link_count DESC
+        LIMIT 100
+    """))
+    nodes = [{"id": r[0], "title": r[1], "category": r[2] or "未分类",
+              "views": r[3] or 0, "links": r[4]} for r in result.fetchall()]
+
+    # 边：只取两端都在 nodes 中的 wikilink
+    node_ids = {n["id"] for n in nodes}
+    result = await db.execute(text("""
+        SELECT n1.slug AS src, nl.target_note_slug AS tgt
+        FROM note_links nl
+        JOIN notes n1 ON nl.source_note_id = n1.id
+        WHERE nl.link_type = 'wikilink'
+        LIMIT 1000
+    """))
+    edges = []
+    seen = set()
+    for r in result.fetchall():
+        src, tgt = r[0], r[1]
+        if src in node_ids and tgt and tgt in node_ids and (src, tgt) not in seen:
+            edges.append({"source": src, "target": tgt})
+            seen.add((src, tgt))
+
+    return {"nodes": nodes, "edges": edges, "node_count": len(nodes), "edge_count": len(edges)}
+
+
 @router.get("/dashboard")
 async def dashboard(db: AsyncSession = Depends(get_db)):
     """首页仪表盘：核心统计 + 最近更新"""

@@ -29,6 +29,7 @@ export default function Navbar() {
         <nav className="hidden sm:flex items-center gap-6 text-sm">
           <Link href="/notes" className="hover:text-primary dark:text-gray-300 dark:hover:text-primary transition-colors">全部笔记</Link>
           <Link href="/search" className="hover:text-primary dark:text-gray-300 dark:hover:text-primary transition-colors">搜索</Link>
+          <Link href="/knowledge-graph" className="hover:text-primary dark:text-gray-300 dark:hover:text-primary transition-colors">图谱</Link>
           <button onClick={toggle} className="p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-lg"
             title={dark ? "切换日间模式" : "切换夜间模式"}>{dark ? "☀️" : "🌙"}</button>
         </nav>
@@ -57,6 +58,7 @@ export default function Navbar() {
             className="block px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-sm">全部笔记</Link>
           <Link href="/search" onClick={() => setMenuOpen(false)}
             className="block px-3 py-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-sm">搜索</Link>
+          <Link href="/knowledge-graph" className="hover:text-primary dark:text-gray-300 dark:hover:text-primary transition-colors">图谱</Link>
         </nav>
       )}
     </header>
