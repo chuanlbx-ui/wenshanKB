@@ -1,3 +1,4 @@
+import Dashboard from "@/components/Dashboard";
 import CategoryNav from "@/components/CategoryNav";
 import SearchBar from "@/components/SearchBar";
 import Link from "next/link";
@@ -18,6 +19,9 @@ export default function Home() {
         </p>
         <SearchBar />
       </section>
+
+      {/* 仪表盘 */}
+      <Dashboard />
 
       {/* 分类导航 */}
       <section className="mb-12">

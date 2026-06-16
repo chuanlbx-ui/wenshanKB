@@ -118,3 +118,45 @@ async def review_draft(body: ReviewAction, db: AsyncSession = Depends(get_db)):
 
     await db.commit()
     return {"slug": body.slug, "action": body.action, "new_status": new_status}
+
+
+@router.get("/dashboard")
+async def dashboard(db: AsyncSession = Depends(get_db)):
+    """首页仪表盘：核心统计 + 最近更新"""
+    # 基本统计
+    stats = await db.execute(text("""
+        SELECT
+            COUNT(*) FILTER (WHERE status = 'published') AS total,
+            COUNT(*) FILTER (WHERE status = 'pending_review') AS drafts,
+            COUNT(*) FILTER (WHERE freshness IS NOT NULL AND freshness != 'fresh') AS stale,
+            COUNT(DISTINCT category_id) FILTER (WHERE status = 'published') AS categories
+        FROM notes
+    """))
+    row = stats.fetchone()
+
+    # 失效链接数
+    result = await db.execute(text("SELECT slug FROM notes WHERE status = 'published'"))
+    existing_slugs = {r[0] for r in result.fetchall()}
+    result = await db.execute(text(
+        "SELECT COUNT(*) FROM note_links WHERE link_type = 'wikilink' AND target_note_slug NOT IN (SELECT slug FROM notes WHERE status = 'published')"
+    ))
+    broken = result.fetchone()[0]
+
+    # 最近更新 5 篇
+    recent = await db.execute(text("""
+        SELECT title, slug, updated_at, view_count FROM notes
+        WHERE status = 'published' AND slug NOT LIKE 'crawler-%' AND slug NOT IN ('00-MOC','index','log','purpose','changelog','README','-MOC','-索引','文山KB总索引')
+        ORDER BY updated_at DESC LIMIT 5
+    """))
+    recent_notes = [{"title": r[0], "slug": r[1],
+                      "updated_at": r[2].isoformat() if r[2] else None,
+                      "view_count": r[3] or 0} for r in recent.fetchall()]
+
+    return {
+        "total": row[0] or 0,
+        "drafts": row[1] or 0,
+        "stale": row[2] or 0,
+        "categories": row[3] or 0,
+        "broken_links": broken,
+        "recent_updates": recent_notes,
+    }
