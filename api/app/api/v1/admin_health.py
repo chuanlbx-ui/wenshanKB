@@ -138,7 +138,17 @@ async def dashboard(db: AsyncSession = Depends(get_db)):
     result = await db.execute(text("SELECT slug FROM notes WHERE status = 'published'"))
     existing_slugs = {r[0] for r in result.fetchall()}
     result = await db.execute(text(
-        "SELECT COUNT(*) FROM note_links WHERE link_type = 'wikilink' AND target_note_slug NOT IN (SELECT slug FROM notes WHERE status = 'published')"
+        """SELECT COUNT(*) FROM note_links
+           WHERE link_type = 'wikilink'
+             AND target_note_slug NOT IN (SELECT slug FROM notes WHERE status = 'published')
+             AND target_note_slug NOT LIKE '%MOC%'
+             AND target_note_slug NOT LIKE '%索引%'
+             AND target_note_slug NOT LIKE 'wiki-%'
+             AND target_note_slug NOT LIKE 'ai-hub-%'
+             AND target_note_slug NOT LIKE 'synthesis-%'
+             AND target_note_slug NOT LIKE 'p%-%报告%'
+             AND target_note_slug NOT LIKE '..-%'
+             AND target_note_slug NOT LIKE 'blueprint-%'"""
     ))
     broken = result.fetchone()[0]
 
