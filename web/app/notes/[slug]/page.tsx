@@ -6,7 +6,9 @@ import Link from "next/link";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
+import rehypeHighlight from "rehype-highlight";
 import TocSidebar from "@/components/TocSidebar";
+import MobileToc from "@/components/MobileToc";
 import { remarkHeadingIds } from "@/lib/remark-heading-ids";
 import { fetchNote } from "@/lib/api";
 import { renderWikilinks } from "@/lib/wikilink";
@@ -136,7 +138,7 @@ export default function NoteDetailPage() {
       )}
 
       <div className="prose prose-lg max-w-none">
-        <ReactMarkdown remarkPlugins={[remarkGfm, remarkHeadingIds]} rehypePlugins={[rehypeRaw]}>{processedContent}</ReactMarkdown>
+        <ReactMarkdown remarkPlugins={[remarkGfm, remarkHeadingIds]} rehypePlugins={[rehypeRaw, rehypeHighlight]}>{processedContent}</ReactMarkdown>
       </div>
 
       {note.frontmatter?.sources && Array.isArray(note.frontmatter.sources) && note.frontmatter.sources.length > 0 && (
