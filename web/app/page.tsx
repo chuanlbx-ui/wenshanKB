@@ -9,8 +9,8 @@ export default function Home() {
   return (
     <div>
       {/* Hero 搜索区 */}
-      <section className="text-center py-16">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
+      <section className="text-center py-10 sm:py-16">
+        <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-gray-100 mb-3">
           文山州知识库
         </h1>
         <p className="text-lg text-gray-500 dark:text-gray-400 dark:text-gray-500 mb-10">

@@ -32,6 +32,7 @@ export default function NoteDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [highlightQuery, setHighlightQuery] = useState("");
+  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     // 从 URL 读取 ?hl= 参数（避免 useSearchParams 的 Suspense 限制）
@@ -70,7 +71,7 @@ export default function NoteDetailPage() {
   // ── 条件返回 ──
   if (loading)
     return (
-      <div className="max-w-3xl mx-auto animate-pulse space-y-4 py-10">
+      <div className="max-w-3xl mx-auto px-1 animate-pulse space-y-4 py-10">
         <div className="h-4 bg-gray-200 rounded w-1/4" />
         <div className="h-8 bg-gray-200 rounded w-3/4" />
         <div className="h-4 bg-gray-200 rounded w-1/3" />
@@ -90,7 +91,7 @@ export default function NoteDetailPage() {
   const confidence = note.frontmatter?.confidence;
 
   return (
-    <article className="max-w-3xl mx-auto">
+    <article className="max-w-3xl mx-auto px-1">
       <nav className="flex items-center gap-2 text-sm text-gray-400 dark:text-gray-500 mb-4">
         <Link href="/" className="hover:text-primary">首页</Link>
         <span>/</span>
@@ -109,7 +110,7 @@ export default function NoteDetailPage() {
         >{note.category}</Link>
       )}
 
-      <h1 className="text-3xl font-bold text-gray-900 dark:text-gray-100 mt-3 mb-2">{note.title}</h1>
+      <div className="flex items-start justify-between gap-4 mt-3 mb-2"><h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 flex-1">{note.title}</h1><button onClick={async () => { await navigator.clipboard.writeText(window.location.href); setCopied(true); setTimeout(() => setCopied(false), 2000); }} className="shrink-0 px-3 py-1.5 text-xs rounded-lg border border-gray-200 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-500 dark:text-gray-400 transition-colors mt-1">{copied ? "✅ 已复制" : "🔗 分享"}</button></div>
 
       <div className="flex flex-wrap items-center gap-4 text-sm text-gray-400 dark:text-gray-500 mb-4">
         <span>👁 {note.view_count} 次浏览</span>

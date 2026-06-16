@@ -79,3 +79,13 @@ body {
 .dark .prose table { color: #d1d5db; }
 .dark .prose pre { background: #0f172a; }
 .dark .bg-gray-200 { background-color: #374151; }
+
+/* ── 移动端优化 ── */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+@media (max-width: 640px) {
+  .prose { font-size: 0.95rem; }
+  .prose h1 { font-size: 1.5rem; }
+  .prose h2 { font-size: 1.25rem; }
+}

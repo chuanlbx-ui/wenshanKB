@@ -21,7 +21,7 @@ async def list_notes(
     db: AsyncSession = Depends(get_db),
 ):
     """公开端点：笔记列表"""
-    conditions = ["n.status = :status"]
+    conditions = ["n.status = :status", "n.slug NOT IN ('00-MOC','index','log','purpose','changelog','README','-MOC','-索引,'文山KB总索引')"]
     params = {"status": status}
 
     if category:
