@@ -86,7 +86,7 @@ async def _semantic_search(db, query: str, limit: int, category: Optional[str] =
                1.0 - (n.embedding <=> :vec) AS score
         FROM notes n
         LEFT JOIN categories c ON n.category_id = c.id
-        WHERE n.status = 'published' AND n.slug NOT IN ('00-MOC','index','log','purpose','changelog','README','-MOC','-索引,'文山KB总索引')
+        WHERE n.status = 'published' AND n.slug NOT IN ('00-MOC','index','log','purpose','changelog','README','-MOC','-索引','文山KB总索引')
           AND n.embedding IS NOT NULL
           {cat_cond}
         ORDER BY n.embedding <=> :vec
@@ -118,7 +118,7 @@ async def _fulltext_search(db, query: str, limit: int, category: Optional[str] =
                ts_rank(n.search_vector, plainto_tsquery('simple', :q)) AS score
         FROM notes n
         LEFT JOIN categories c ON n.category_id = c.id
-        WHERE n.status = 'published' AND n.slug NOT IN ('00-MOC','index','log','purpose','changelog','README','-MOC','-索引,'文山KB总索引')
+        WHERE n.status = 'published' AND n.slug NOT IN ('00-MOC','index','log','purpose','changelog','README','-MOC','-索引','文山KB总索引')
           AND n.search_vector @@ plainto_tsquery('simple', :q)
           {cat_cond}
         ORDER BY score DESC

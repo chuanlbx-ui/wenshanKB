@@ -1,12 +1,18 @@
 """知识库健康检查 — 检测失效 wikilink、frontmatter 缺失等"""
 
 import re
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from app.db.session import get_db
 
 router = APIRouter(prefix="/admin", tags=["管理"])
+
+
+class ReviewAction(BaseModel):
+    action: str  # "approve" or "reject"
+    slug: str
 
 
 @router.get("/link-check")
@@ -68,3 +74,47 @@ async def quality_report(db: AsyncSession = Depends(get_db)):
         "missing_sources": row[3],
         "short_notes": row[4],
     }
+
+
+# ── 采集草稿审核 ──
+
+@router.get("/drafts")
+async def list_drafts(db: AsyncSession = Depends(get_db)):
+    """列出所有待审核的采集草稿"""
+    result = await db.execute(text("""
+        SELECT slug, title, plain_text, source_path, created_at, content
+        FROM notes
+        WHERE source_type = 'crawler' AND status = 'pending_review'
+        ORDER BY created_at DESC
+        LIMIT 50
+    """))
+    drafts = []
+    for r in result.fetchall():
+        drafts.append({
+            "slug": r[0],
+            "title": r[1],
+            "summary": (r[2] or "")[:300],
+            "source_url": r[3],
+            "created_at": r[4].isoformat() if r[4] else None,
+            "content_preview": (r[5] or "")[:500],
+        })
+    return {"total": len(drafts), "drafts": drafts}
+
+
+@router.post("/review")
+async def review_draft(body: ReviewAction, db: AsyncSession = Depends(get_db)):
+    """审核草稿：approve 发布 / reject 归档"""
+    if body.action not in ("approve", "reject"):
+        raise HTTPException(status_code=400, detail="action 必须为 approve 或 reject")
+
+    new_status = "published" if body.action == "approve" else "archived"
+
+    result = await db.execute(
+        text("UPDATE notes SET status = :status WHERE slug = :slug AND status = 'pending_review' RETURNING id"),
+        {"status": new_status, "slug": body.slug},
+    )
+    if not result.fetchone():
+        raise HTTPException(status_code=404, detail="草稿不存在或已处理")
+
+    await db.commit()
+    return {"slug": body.slug, "action": body.action, "new_status": new_status}
