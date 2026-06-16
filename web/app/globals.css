@@ -64,3 +64,18 @@ body {
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+
+/* ── 暗黑模式 ── */
+.dark .prose { color: #d1d5db; }
+.dark .prose h1, .dark .prose h2, .dark .prose h3 { color: #e5e7eb; }
+.dark .prose h2 { border-color: #374151; }
+.dark .prose blockquote { background: #111827; color: #9ca3af; border-color: #2563eb; }
+.dark .prose code { background: #1f2937; color: #e5e7eb; }
+.dark .prose th { background: #111827; border-color: #374151; }
+.dark .prose td { border-color: #374151; }
+.dark .prose a { color: #60a5fa; }
+.dark .prose hr { border-color: #374151; }
+.dark .prose table { color: #d1d5db; }
+.dark .prose pre { background: #0f172a; }
+.dark .bg-gray-200 { background-color: #374151; }

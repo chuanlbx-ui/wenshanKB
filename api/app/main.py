@@ -1,10 +1,12 @@
 """FastAPI 主入口"""
 
 import logging
+from pathlib import Path
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from app.config import get_settings
 from app.api.v1.router import router as v1_router
 
@@ -38,6 +40,17 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── 静态文件：笔记中的 assets/ 图片 ──
+_assets_paths = [
+    Path("."),           # 本地运行
+    Path("/data/markdown"),  # Docker 运行
+]
+for _p in _assets_paths:
+    if _p.exists() and any(_p.glob("**/assets/*")):
+        app.mount("/static", StaticFiles(directory=str(_p)), name="static")
+        logger.info(f"  静态文件挂载: {_p.absolute()} → /static")
+        break
 
 # ── 路由 ──
 app.include_router(v1_router)

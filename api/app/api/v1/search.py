@@ -2,7 +2,8 @@
 
 import time
 import logging
-from fastapi import APIRouter, Depends, HTTPException
+from typing import Optional
+from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from app.db.session import get_db
@@ -21,14 +22,13 @@ async def search_notes(body: SearchRequest, db: AsyncSession = Depends(get_db)):
 
     try:
         if body.search_mode == "fulltext":
-            results = await _fulltext_search(db, body.query, body.page_size)
+            results = await _fulltext_search(db, body.query, body.page_size, body.category)
         elif body.search_mode == "semantic":
-            results = await _semantic_search(db, body.query, body.page_size)
+            results = await _semantic_search(db, body.query, body.page_size, body.category)
         else:
-            # hybrid: 两个结果合并
-            results = await _semantic_search(db, body.query, body.page_size)
+            results = await _semantic_search(db, body.query, body.page_size, body.category)
             if len(results) < body.page_size:
-                ft_results = await _fulltext_search(db, body.query, body.page_size)
+                ft_results = await _fulltext_search(db, body.query, body.page_size, body.category)
                 results.extend(ft_results[:body.page_size - len(results)])
     except Exception as e:
         logger.warning(f"搜索降级: {e}")
@@ -70,14 +70,15 @@ async def search_notes(body: SearchRequest, db: AsyncSession = Depends(get_db)):
     )
 
 
-async def _semantic_search(db: AsyncSession, query: str, limit: int) -> list[dict]:
+async def _semantic_search(db, query: str, limit: int, category: Optional[str] = None) -> list[dict]:
     """pgvector 语义搜索"""
     vec = await generate_embedding(query)
     if vec is None:
         return []
 
     vec_str = "[" + ",".join([f"{v:.8f}" for v in vec]) + "]"
-    sql = text("""
+    cat_cond = "AND (c.name = :cat OR c.display_name = :cat)" if category else ""
+    sql = text(f"""
         SELECT n.id::text, n.title, n.slug, c.display_name AS category,
                n.status, n.view_count, n.like_count,
                n.created_at, n.updated_at,
@@ -87,10 +88,14 @@ async def _semantic_search(db: AsyncSession, query: str, limit: int) -> list[dic
         LEFT JOIN categories c ON n.category_id = c.id
         WHERE n.status = 'published'
           AND n.embedding IS NOT NULL
+          {cat_cond}
         ORDER BY n.embedding <=> :vec
         LIMIT :limit
     """)
-    result = await db.execute(sql, {"vec": vec_str, "limit": limit})
+    params = {"vec": vec_str, "limit": limit}
+    if category:
+        params["cat"] = category
+    result = await db.execute(sql, params)
     rows = result.fetchall()
 
     return [
@@ -102,9 +107,10 @@ async def _semantic_search(db: AsyncSession, query: str, limit: int) -> list[dic
     ]
 
 
-async def _fulltext_search(db: AsyncSession, query: str, limit: int) -> list[dict]:
+async def _fulltext_search(db, query: str, limit: int, category: Optional[str] = None) -> list[dict]:
     """PostgreSQL 全文搜索"""
-    sql = text("""
+    cat_cond = "AND (c.name = :cat OR c.display_name = :cat)" if category else ""
+    sql = text(f"""
         SELECT n.id::text, n.title, n.slug, c.display_name AS category,
                n.status, n.view_count, n.like_count,
                n.created_at, n.updated_at,
@@ -114,10 +120,14 @@ async def _fulltext_search(db: AsyncSession, query: str, limit: int) -> list[dic
         LEFT JOIN categories c ON n.category_id = c.id
         WHERE n.status = 'published'
           AND n.search_vector @@ plainto_tsquery('simple', :q)
+          {cat_cond}
         ORDER BY score DESC
         LIMIT :limit
     """)
-    result = await db.execute(sql, {"q": query, "limit": limit})
+    params = {"q": query, "limit": limit}
+    if category:
+        params["cat"] = category
+    result = await db.execute(sql, params)
     rows = result.fetchall()
 
     return [

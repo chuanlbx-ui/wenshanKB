@@ -1,7 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
-
 const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
 export interface NoteSummary {
@@ -18,13 +16,19 @@ export interface NoteSummary {
 export async function fetchNotes(params?: Record<string, string>): Promise<{
   notes: NoteSummary[];
   pagination: { total: number; page: number; total_pages: number };
+  error?: string;
 }> {
-  const url = new URL(`${API}/api/v1/notes`);
-  if (params) {
-    Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  try {
+    const url = new URL(`${API}/api/v1/notes`);
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+    }
+    const res = await fetch(url.toString());
+    if (!res.ok) return { notes: [], pagination: { total: 0, page: 1, total_pages: 0 } };
+    return res.json();
+  } catch (e: any) {
+    return { notes: [], pagination: { total: 0, page: 1, total_pages: 0 }, error: e.message };
   }
-  const res = await fetch(url.toString());
-  return res.json();
 }
 
 export async function fetchNote(slug: string): Promise<any> {
@@ -33,11 +37,29 @@ export async function fetchNote(slug: string): Promise<any> {
   return res.json();
 }
 
-export async function searchNotes(query: string): Promise<any> {
+export async function searchNotes(query: string, category?: string): Promise<any> {
+  const body: any = { query, page_size: 20 };
+  if (category) body.category = category;
   const res = await fetch(`${API}/api/v1/search`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ query, page_size: 20 }),
+    body: JSON.stringify(body),
   });
   return res.json();
 }
+
+// 分类列表
+export const CATEGORIES = [
+  { name: "", label: "全部分类" },
+  { name: "00-总览", label: "总览" },
+  { name: "01-地理与自然环境", label: "地理" },
+  { name: "02-历史沿革", label: "历史" },
+  { name: "03-行政区划", label: "区划" },
+  { name: "04-人口与民族", label: "民族" },
+  { name: "05-经济发展", label: "经济" },
+  { name: "06-文化旅游", label: "文旅" },
+  { name: "07-特产与资源", label: "特产" },
+  { name: "08-交通与基础设施", label: "交通" },
+  { name: "09-政策与治理", label: "政策" },
+  { name: "10-社会民生", label: "民生" },
+];

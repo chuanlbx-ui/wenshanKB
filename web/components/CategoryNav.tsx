@@ -23,7 +23,7 @@ export default function CategoryNav() {
         <Link
           key={cat.slug}
           href={`/notes?category=${cat.slug}`}
-          className="px-3 py-1.5 rounded-full text-sm bg-gray-100 hover:bg-primary hover:text-white transition-colors"
+          className="px-3 py-1.5 rounded-full text-sm bg-gray-100 dark:bg-gray-700 hover:bg-primary hover:text-white transition-colors"
         >
           {cat.label}
         </Link>

@@ -163,7 +163,9 @@ async def import_note(db, filepath: Path, source_root: Path) -> Optional[dict]:
     # 处理 wikilink 关系
     wikilinks = extract_all_wikilinks(metadata, body)
     for target, alias in wikilinks:
-        target_slug = slugify(target)
+        # 去掉目录前缀：06-文化旅游/砚山康养 → 砚山康养
+        clean_target = target.split("/")[-1] if "/" in target else target
+        target_slug = slugify(clean_target)
         await db.execute(text("""
             INSERT INTO note_links (source_note_id, target_note_slug, link_text, link_type)
             VALUES (:src_id, :target, :text, 'wikilink')

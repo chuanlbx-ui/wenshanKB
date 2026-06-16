@@ -25,8 +25,9 @@ async def list_notes(
     params = {"status": status}
 
     if category:
-        conditions.append("c.name = :category")
-        params["category"] = category
+        # 支持 name (01-地理与自然环境) 和 display_name (地理与自然环境) 两种传参
+        conditions.append("(c.name = :cat OR c.display_name = :cat)")
+        params["cat"] = category
 
     offset = (page - 1) * page_size
 
@@ -71,7 +72,8 @@ async def get_note(slug: str, db: AsyncSession = Depends(get_db)):
     query = text("""
         SELECT n.id, n.title, n.slug, c.display_name AS category, n.status,
                n.freshness, n.content, n.frontmatter, n.plain_text,
-               n.view_count, n.like_count, n.created_at, n.updated_at
+               n.view_count, n.like_count, n.created_at, n.updated_at,
+               n.source_path
         FROM notes n
         LEFT JOIN categories c ON n.category_id = c.id
         WHERE n.slug = :slug AND n.status = 'published'
@@ -93,6 +95,7 @@ async def get_note(slug: str, db: AsyncSession = Depends(get_db)):
         "created_at": row[11].isoformat() if row[11] else None,
         "updated_at": row[12].isoformat() if row[12] else None,
         "tags": [],
+        "source_path": row[13] if row[13] else None,
     }
 
 

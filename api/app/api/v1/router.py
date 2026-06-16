@@ -9,6 +9,7 @@ from app.api.v1.compliance import router as compliance_router
 from app.api.v1.feedback import router as feedback_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.agent.tools import router as agent_tools_router
+from app.api.v1.admin_health import router as admin_router
 
 router = APIRouter(prefix="/api/v1")
 
@@ -20,3 +21,4 @@ router.include_router(compliance_router, tags=["合规"])
 router.include_router(feedback_router, tags=["反馈"])
 router.include_router(auth_router, tags=["认证"])
 router.include_router(agent_tools_router, tags=["Agent Tools"])
+router.include_router(admin_router)

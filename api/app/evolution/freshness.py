@@ -36,7 +36,7 @@ async def _calculate_freshness() -> dict:
                 freshness = "aging"
 
             await db.execute(text("""
-                UPDATE notes SET freshness_score = :score, freshness = :f
+                UPDATE notes SET freshness_score = :score, freshness = :freshness
                 WHERE id = :id
             """), {"score": score, "freshness": freshness, "id": note_id})
 
