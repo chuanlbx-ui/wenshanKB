@@ -19,7 +19,7 @@ interface GraphEdge {
 
 export default function KnowledgeGraphPage() {
   const svgRef = useRef<SVGSVGElement>(null);
-  const [data, setData] = useState<{ nodes: GraphNode[]; edges: GraphEdge[] } | null>(null);
+  const [data, setData] = useState<{ nodes: GraphNode[]; edges: GraphEdge[]; node_count: number; edge_count: number } | null>(null);
   const [loading, setLoading] = useState(true);
   const [tooltip, setTooltip] = useState<{ x: number; y: number; node: GraphNode } | null>(null);
 

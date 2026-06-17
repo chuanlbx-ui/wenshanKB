@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+export const dynamic = "force-dynamic";
+
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import NoteCard from "@/components/NoteCard";
 import CategoryNav from "@/components/CategoryNav";
 import { fetchNotes, NoteSummary } from "@/lib/api";
 
-export default function NotesPage() {
+function NotesPageContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const category = searchParams.get("category") || "";
@@ -137,3 +139,6 @@ export default function NotesPage() {
     </div>
   );
 }
+
+
+export default function Page() { return <Suspense fallback={<div className="text-center py-20 text-gray-400">加载中...</div>}><NotesPageContent /></Suspense>; }

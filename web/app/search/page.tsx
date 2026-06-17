@@ -1,12 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
+export const dynamic = "force-dynamic";
+
+import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import NoteCard from "@/components/NoteCard";
 import SearchBar from "@/components/SearchBar";
 import { searchNotes, CATEGORIES } from "@/lib/api";
 
-export default function SearchPage() {
+function SearchPageContent() {
   const searchParams = useSearchParams();
   const query = searchParams.get("q") || "";
   const catParam = searchParams.get("cat") || "";
@@ -72,3 +74,6 @@ export default function SearchPage() {
     </div>
   );
 }
+
+
+export default function Page() { return <Suspense fallback={<div className="text-center py-20 text-gray-400">加载中...</div>}><SearchPageContent /></Suspense>; }
