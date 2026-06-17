@@ -34,7 +34,7 @@ async def generate_embedding(text: str) -> Optional[list[float]]:
 
         response = await client.embeddings.create(
             model=settings.EMBEDDING_MODEL,
-            input=text[:20000],
+            input=text[:500],  # SiliconFlow 限制 512 tokens
             encoding_format="float",
         )
 
