@@ -1,7 +1,7 @@
-"""向量嵌入服务 — 兼容多 API 提供商
+"""向量嵌入服务 — 支持独立 embedding API
 
-DeepSeek chat API 不支持 embeddings 端点（返回 404）。
-自动检测并禁用语义搜索，回退到 PostgreSQL 全文搜索。
+如果配置了 EMBEDDING_API_KEY/EMBEDDING_BASE_URL，使用专用服务。
+否则回退到 LLM 配置。两者都不可用时降级全文搜索。
 """
 
 import logging
@@ -11,38 +11,43 @@ from app.config import get_settings
 logger = logging.getLogger("wenshan-kb.embedding")
 settings = get_settings()
 
-# 缓存检测结果：避免每 10 分钟重复尝试 404 的 API
 _embedding_disabled = False
 
 
 async def generate_embedding(text: str) -> Optional[list[float]]:
-    """生成文本向量嵌入 (1536维)
-    
-    如果 LLM 提供商不支持 embeddings API，自动降级到全文搜索。
-    """
+    """生成文本向量嵌入"""
     global _embedding_disabled
 
-    if _embedding_disabled or not settings.LLM_API_KEY:
+    if _embedding_disabled:
+        return None
+
+    api_key = settings.EMBEDDING_API_KEY or settings.LLM_API_KEY
+    base_url = settings.EMBEDDING_BASE_URL
+
+    if not api_key:
         return None
 
     try:
         from openai import AsyncOpenAI
 
-        client = AsyncOpenAI(
-            api_key=settings.LLM_API_KEY,
-            base_url=settings.LLM_BASE_URL,
-        )
+        client = AsyncOpenAI(api_key=api_key, base_url=base_url)
 
         response = await client.embeddings.create(
             model=settings.EMBEDDING_MODEL,
             input=text[:20000],
         )
 
-        return response.data[0].embedding
+        dim = len(response.data[0].embedding)
+        logger.info(f"嵌入成功: dim={dim}, provider={base_url}")
+
+        # 如果维度不匹配，截断或填充到 1536
+        if dim < 1536:
+            return response.data[0].embedding + [0.0] * (1536 - dim)
+        return response.data[0].embedding[:1536]
 
     except Exception as e:
-        # 如果是 404（端点不存在），永久禁用
-        if "404" in str(e) or "not found" in str(e).lower():
+        msg = str(e).lower()
+        if "404" in msg or "not found" in msg or "does not exist" in msg:
             _embedding_disabled = True
-            logger.info("Embedding API 不可用，全局降级到全文搜索")
+            logger.info(f"Embedding API 不可用({base_url})，全局降级全文搜索")
         return None

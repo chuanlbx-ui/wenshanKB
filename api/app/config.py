@@ -33,14 +33,21 @@ class Settings:
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_HOURS: int = 72
 
-    # ── AI ──
+    # ── AI（Chat 用）──
     LLM_API_KEY: str = os.getenv("LLM_API_KEY", "")
     LLM_BASE_URL: str = os.getenv(
-        "LLM_BASE_URL", "https://dashscope.aliyuncs.com/compatible-mode/v1"
+        "LLM_BASE_URL", "https://api.deepseek.com"
     )
-    LLM_MODEL: str = os.getenv("LLM_MODEL", "qwen-max")
-    EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "text-embedding-3-small")
-    EMBEDDING_DIM: int = 1536
+    LLM_MODEL: str = os.getenv("LLM_MODEL", "deepseek-chat")
+
+    # ── 向量嵌入（可独立于 LLM 配置）──
+    EMBEDDING_API_KEY: str = os.getenv("EMBEDDING_API_KEY", os.getenv("LLM_API_KEY", ""))
+    EMBEDDING_BASE_URL: str = os.getenv(
+        "EMBEDDING_BASE_URL",
+        "https://api.siliconflow.cn/v1",  # 硅基流动提供免费 embedding
+    )
+    EMBEDDING_MODEL: str = os.getenv("EMBEDDING_MODEL", "BAAI/bge-large-zh-v1.5")
+    EMBEDDING_DIM: int = 1024  # bge-large-zh 是 1024 维
 
     # ── CORS ──
     CORS_ORIGINS: list[str] = os.getenv("CORS_ORIGINS", "*").split(",")
