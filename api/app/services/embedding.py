@@ -35,6 +35,7 @@ async def generate_embedding(text: str) -> Optional[list[float]]:
         response = await client.embeddings.create(
             model=settings.EMBEDDING_MODEL,
             input=text[:20000],
+            encoding_format="float",
         )
 
         dim = len(response.data[0].embedding)
