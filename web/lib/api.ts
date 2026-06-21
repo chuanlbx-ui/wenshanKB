@@ -1,6 +1,7 @@
 "use client";
 
-const API = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+// 本地开发用 localhost:8000，生产环境用相对路径（Nginx 代理 /api/）
+const API = process.env.NEXT_PUBLIC_API_URL || "";
 
 export interface NoteSummary {
   id: string;
@@ -19,11 +20,12 @@ export async function fetchNotes(params?: Record<string, string>): Promise<{
   error?: string;
 }> {
   try {
-    const url = new URL(`${API}/api/v1/notes`);
+    let urlStr = `${API}/api/v1/notes`;
     if (params) {
-      Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+      const searchParams = new URLSearchParams(params);
+      urlStr += `?${searchParams.toString()}`;
     }
-    const res = await fetch(url.toString());
+    const res = await fetch(urlStr);
     if (!res.ok) return { notes: [], pagination: { total: 0, page: 1, total_pages: 0 } };
     return res.json();
   } catch (e: any) {

@@ -14,7 +14,7 @@ import { fetchNote } from "@/lib/api";
 import { renderWikilinks } from "@/lib/wikilink";
 import { highlightText } from "@/lib/highlight";
 
-const API = "http://localhost:8000";
+const API = process.env.NEXT_PUBLIC_API_URL || "";
 
 function rewriteImages(content: string, sourcePath?: string): string {
   if (!sourcePath) return content;
