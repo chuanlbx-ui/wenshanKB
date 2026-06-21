@@ -58,7 +58,7 @@ async def quality_report(db: AsyncSession = Depends(get_db)):
     result = await db.execute(text("""
         SELECT
             COUNT(*) AS total,
-            COUNT(*) FILTER (WHERE fresh IS NOT NULL AND fresh != '') - COUNT(*) FILTER (WHERE freshness = 'fresh') AS stale_notes,
+            COUNT(*) FILTER (WHERE freshness IS NOT NULL AND freshness != '') - COUNT(*) FILTER (WHERE freshness = 'fresh') AS stale_notes,
             COUNT(*) FILTER (WHERE frontmatter->>'confidence' IS NULL) AS missing_confidence,
             COUNT(*) FILTER (WHERE frontmatter->>'sources' IS NULL OR frontmatter->>'sources' = '[]') AS missing_sources,
             COUNT(*) FILTER (WHERE plain_text IS NULL OR length(plain_text) < 200) AS short_notes
