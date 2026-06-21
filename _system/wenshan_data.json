@@ -1,0 +1,210 @@
+{
+  "schema_version": "1.0",
+  "created_at": "2026-05-24",
+  "last_updated": "2026-06-17",
+  "description": "文山州知识库主数据表，存储核心指标和统计数据",
+  
+  "data_sources": [
+    {
+      "name": "文山州2025年国民经济和社会发展统计公报",
+      "url": "ynws.gov.cn",
+      "year": 2025
+    },
+    {
+      "name": "人民网《文山州2025经济发展交出亮眼成绩单》",
+      "url": "人民网",
+      "year": 2025
+    },
+    {
+      "name": "文山州2025年国民经济和社会发展报告",
+      "url": "",
+      "year": 2025
+    },
+    {
+      "name": "文山州2025年政府预算公开",
+      "url": "",
+      "year": 2025
+    }
+  ],
+  
+  "core_indicators": {
+    "gdp": {
+      "2025": {
+        "value": 1632.64,
+        "unit": "亿元",
+        "growth_rate": 5.3,
+        "growth_unit": "%",
+        "description": "地区生产总值，增速高于全国全省平均水平"
+      }
+    },
+    "primary_industry": {
+      "2025": {
+        "value": 273.23,
+        "unit": "亿元",
+        "growth_rate": 2.6,
+        "growth_unit": "%",
+        "share_of_gdp": 16.7,
+        "share_unit": "%",
+        "description": "第一产业增加值"
+      }
+    },
+    "secondary_industry": {
+      "2025": {
+        "value": 587.23,
+        "unit": "亿元",
+        "growth_rate": 7.7,
+        "growth_unit": "%",
+        "share_of_gdp": 36.0,
+        "share_unit": "%",
+        "industrial_value_added_growth": 12.9,
+        "industrial_growth_unit": "%",
+        "description": "第二产业增加值，工业增加值增长12.9%"
+      }
+    },
+    "tertiary_industry": {
+      "2025": {
+        "value": 772.19,
+        "unit": "亿元",
+        "growth_rate": 4.6,
+        "growth_unit": "%",
+        "share_of_gdp": 47.3,
+        "share_unit": "%",
+        "description": "第三产业增加值"
+      }
+    },
+    "green_aluminum": {
+      "2025": {
+        "value": 1016,
+        "unit": "亿元",
+        "description": "绿色铝产值突破千亿达1016亿元，电解铝产能占全省52.8%、全国7.7%，首个千亿级产业",
+        "electrolytic_capacity_province_share": 52.8,
+        "electrolytic_capacity_national_share": 7.7,
+        "recycled_aluminum_capacity": 90,
+        "recycled_unit": "万吨",
+        "direct_employment": 1.3,
+        "employment_unit": "万人"
+      }
+    },
+    "panax_notoginseng": {
+      "2025": {
+        "value": 220,
+        "unit": "亿元",
+        "growth_rate": 7.0,
+        "growth_unit": "%",
+        "description": "三七产业综合产值（单品口径），不等于中药材综合总产值"
+      }
+    },
+    "chinese_herbal_medicine": {
+      "2025": {
+        "value": 456,
+        "unit": "亿元",
+        "growth_rate": 10.4,
+        "growth_unit": "%",
+        "description": "以三七为主的中药材综合总产值（含三七及关联中药材全产业链），此口径大于三七单品口径"
+      }
+    },
+    "tourism": {
+      "2025": {
+        "visitors": 5256.7,
+        "visitors_unit": "万人次",
+        "visitors_growth": 5.1,
+        "visitors_growth_unit": "%",
+        "revenue": 425.7,
+        "revenue_unit": "亿元",
+        "revenue_growth": 8.4,
+        "revenue_growth_unit": "%",
+        "description": "旅游接待"
+      }
+    },
+    "fixed_asset_investment": {
+      "2025": {
+        "growth_rate": -6.2,
+        "growth_unit": "%",
+        "project_investment_growth": -4.9,
+        "project_investment_growth_unit": "%",
+        "description": "固定资产投资"
+      }
+    },
+    "retail_sales": {
+      "2025": {
+        "total": 720.42,
+        "total_unit": "亿元",
+        "total_growth": 3.7,
+        "total_growth_unit": "%",
+        "urban": 419.58,
+        "urban_unit": "亿元",
+        "urban_growth": 3.3,
+        "urban_growth_unit": "%",
+        "rural": 300.84,
+        "rural_unit": "亿元",
+        "rural_growth": 4.2,
+        "rural_growth_unit": "%",
+        "description": "社会消费品零售总额"
+      }
+    },
+    "public_budget": {
+      "2025": {
+        "revenue": 74.12,
+        "revenue_unit": "亿元",
+        "revenue_growth": 6.8,
+        "revenue_growth_unit": "%",
+        "tax_revenue": 53.57,
+        "tax_revenue_unit": "亿元",
+        "tax_revenue_growth": 10.8,
+        "tax_revenue_growth_unit": "%",
+        "expenditure": 381.87,
+        "expenditure_unit": "亿元",
+        "expenditure_growth": -1.7,
+        "expenditure_growth_unit": "%",
+        "education_expenditure": 91.80,
+        "education_expenditure_unit": "亿元",
+        "education_expenditure_growth": 1.1,
+        "education_expenditure_growth_unit": "%",
+        "description": "地方一般公共预算收支"
+      }
+    },
+    "disposable_income": {
+      "2025": {
+        "per_capita": 26580,
+        "per_capita_unit": "元",
+        "per_capita_growth": 4.4,
+        "per_capita_growth_unit": "%",
+        "urban": 41927,
+        "urban_unit": "元",
+        "urban_growth": 3.1,
+        "urban_growth_unit": "%",
+        "rural": 17501,
+        "rural_unit": "元",
+        "rural_growth": 6.2,
+        "rural_growth_unit": "%",
+        "description": "居民人均可支配收入"
+      }
+    },
+    "population": {
+      "2025": {
+        "total": 335.4,
+        "total_unit": "万人",
+        "urban": 138.1,
+        "urban_unit": "万人",
+        "rural": 197.3,
+        "rural_unit": "万人",
+        "description": "常住人口"
+      }
+    },
+    "gdp_per_capita": {
+      "2025": {
+        "value": 48547,
+        "unit": "元",
+        "growth_rate": 6.0,
+        "growth_unit": "%",
+        "description": "人均GDP"
+      }
+    }
+  },
+  
+  "notes_metadata": {
+    "total_count": 73,
+    "last_extracted": "2026-05-24",
+    "extraction_status": "pending"
+  }
+}

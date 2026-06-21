@@ -1,0 +1,240 @@
+$ python -c "import sys; sys.path.insert(0,'api'); import os; os.environ['DATABASE_URL']='postgresql+asyncpg://kb_user:kb_pass@localhost:5435/wenshan_kb'; os.environ['DATABASE_URL_SYNC']='postgresql://kb_user:kb_pass@localhost:5435/wenshan_kb'; from dotenv import load_dotenv; load_dotenv('.env'); import asyncio; from app.migration.runner import run_migration; asyncio.run(run_migration('.', 'full'))" 2>&1
+[exit 0]
+📂 扫描源目录: .
+📥 开始导入...
+   ✓ ERROR    00-MOC.md  →  (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $5: {'tags': ['系统'], 'created': datetime.dat... ('dict' object has no attribute 'encode')
+[SQL: 
+            INSERT INTO notes (title, slug, content, plain_text, frontmatter,
+                               category_id, status, source_path, source_type,
+                               created_at)
+            VALUES ($1, $2, $3, $4, $5,
+                    $6, 'published', $7, 'obsidian',
+                    COALESCE($8, NOW()))
+            RETURNING id
+        ]
+[parameters: ('00-MOC', '00-MOC', '# 文山州知识库 · 总 MOC\n\n> 最后更新：2026-06-07\n\n文山壮族苗族自治州系统性知识库导航入口。193 篇笔记，10 个分类，4 篇跨分类合成。\n\n---\n\n## 分类导航\n\n| 分类 | MOC | 笔记数 | 说明 |\n|------|-----|--- ... (1455 characters truncated) ... /文蒙铁路专题]]\n- 文山机场 → [[08-交通与基础设施/文山砚山机场]]\n- 边境治理 → [[09-政策与治理/边境治理]]\n- 民族团结与边疆 → [[04-人口与民族/民族团结与边疆治理2025-2026]]\n- 乡村振兴案例 → [[10-社会民生/文山乡村振兴案例]]\n', '文山州知识库 · 总 MOC\n\n最后更新：2026-06-07\n\n文山壮族苗族自治州系统性知识库导航入口。193 篇笔记，10 个分类，4 篇跨分类合成。\n\n---\n\n分类导航\n\n| 分类 | MOC | 笔记数 | 说明 |\n\n| 00-总览 | 00-总览/_MOC | ... (1256 characters truncated) ... n- 文蒙铁路 → 08-交通与基础设施/文蒙铁路专题\n- 文山机场 → 08-交通与基础设施/文山砚山机场\n- 边境治理 → 09-政策与治理/边境治理\n- 民族团结与边疆 → 04-人口与民族/民族团结与边疆治理2025-2026\n- 乡村振兴案例 → 10-社会民生/文山乡村振兴案例', {'tags': ['系统'], 'created': datetime.date(2026, 5, 24), 'updated': datetime.date(2026, 6, 7)}, 14, '00-MOC.md', '2026-05-24')]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+   ✓ ERROR    00-总览\_MOC.md  →  (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $5: {'tags': ['总览', 'MOC', '导航'], 'created':... ('dict' object has no attribute 'encode')
+[SQL: 
+            INSERT INTO notes (title, slug, content, plain_text, frontmatter,
+                               category_id, status, source_path, source_type,
+                               created_at)
+            VALUES ($1, $2, $3, $4, $5,
+                    $6, 'published', $7, 'obsidian',
+                    COALESCE($8, NOW()))
+            RETURNING id
+        ]
+[parameters: ('_MOC', '-MOC', '\n# 00-总览\n\n文山州知识库顶层导航。从这里出发，可以快速定位全库核心概览信息。\n\n## 笔记列表\n\n- [[文山州总览]] — 文山州全面概况\n- [[文山州概况]] — 2025年统计公报数据详情\n- [[核心数据速查]] — 关键统计指标速查手册\n- [[_索引]] — 本目录原始索引\n\n## 交叉入口\n\n- 地理入口 → [[01-地理与自然环境/_MOC]]\n- 经济入口 → [[05-经济发展/_MOC]]\n- 文旅入口 → [[06-文化旅游/_MOC]]\n- 民生入口 → [[10-社会民生/_MOC]]', '00-总览\n\n文山州知识库顶层导航。从这里出发，可以快速定位全库核心概览信息。\n\n笔记列表\n\n- 文山州总览 — 文山州全面概况\n- 文山州概况 — 2025年统计公报数据详情\n- 核心数据速查 — 关键统计指标速查手册\n- _索引 — 本目录原始索引\n\n交叉入口\n\n- 地理入口 → 01-地理与自然环境/_MOC\n- 经济入口 → 05-经济发展/_MOC\n- 文旅入口 → 06-文化旅游/_MOC\n- 民生入口 → 10-社会民生/_MOC', {'tags': ['总览', 'MOC', '导航'], 'created': datetime.date(2026, 5, 24), 'updated': datetime.date(2026, 5, 29), 'related': ['[[文山州总览]]', '[[核心数据速查]]', '[[01-地理与自然环境/_MOC]]', '[[05-经济发展/_MOC]]', '[[06-文化旅游/_MOC]]', '[[10-社会民生/_MOC]]'], 'sources': []}, 1, '00-总览\\_MOC.md', '2026-05-24')]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+   ✓ ERROR    00-总览\_索引.md  →  (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $5: {'tags': ['MOC', '索引'], 'created': datet... ('dict' object has no attribute 'encode')
+[SQL: 
+            INSERT INTO notes (title, slug, content, plain_text, frontmatter,
+                               category_id, status, source_path, source_type,
+                               created_at)
+            VALUES ($1, $2, $3, $4, $5,
+                    $6, 'published', $7, 'obsidian',
+                    COALESCE($8, NOW()))
+            RETURNING id
+        ]
+[parameters: ('_索引', '-索引', '\n# 00-总览 · 索引\n\n- [[文山州总览]]\n- [[文山州概况]]\n- [[核心数据速查]]\n- [[文山KB总索引]]\n', '00-总览 · 索引\n\n- 文山州总览\n- 文山州概况\n- 核心数据速查\n- 文山KB总索引', {'tags': ['MOC', '索引'], 'created': datetime.date(2026, 5, 24), 'updated': datetime.date(2026, 6, 1), 'confidence': '低', 'sources': []}, 1, '00-总览\\_索引.md', '2026-05-24')]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+   ✓ ERROR    00-总览\文山KB总索引.md  →  (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $5: {'tags': ['总览', '索引', 'MOC', '导航'], 'cre... ('dict' object has no attribute 'encode')
+[SQL: 
+            INSERT INTO notes (title, slug, content, plain_text, frontmatter,
+                               category_id, status, source_path, source_type,
+                               created_at)
+            VALUES ($1, $2, $3, $4, $5,
+                    $6, 'published', $7, 'obsidian',
+                    COALESCE($8, NOW()))
+            RETURNING id
+        ]
+[parameters: ('文山KB总索引', '文山KB总索引', '\n# 文山州知识库 · 总索引 (MOC)\n\n> 本文档是 D:\\WenShanKB 的 Map of Content，按主题聚类全库 181 篇笔记，附一句话简介。点击 wikilink 直达。\n>\n> **最新升级（2026-06-07）**：P0 索引同步修复 — 00-MOC. ... (10966 characters truncated) ... 笔记/素材/Prompt/合规检查 7 个端点 |\n| [[../blueprint/mvp/app.py|FastAPI 应用]] | 可独立运行后端骨架，含模拟数据回退与完整认证 |\n\n---\n\n> 索引覆盖全库 187 篇笔记，共 14 个主题分区。最后更新：2026-06-07。', '文山州知识库 · 总索引 (MOC)\n\n本文档是 D:\\WenShanKB 的 Map of Content，按主题聚类全库 181 篇笔记，附一句话简介。点击 wikilink 直达。\n最新升级（2026-06-07）：P0 索引同步修复 — 00-MOC.md、index.md、_索引 ... (8448 characters truncated) ... | OpenAPI 3.0：搜索/笔记/素材/Prompt/合规检查 7 个端点 |\n| ../blueprint/mvp/app.py | 可独立运行后端骨架，含模拟数据回退与完整认证 |\n\n---\n\n索引覆盖全库 187 篇笔记，共 14 个主题分区。最后更新：2026-06-07。', {'tags': ['总览', '索引', 'MOC', '导航'], 'created': datetime.date(2026, 5, 30), 'sources': ['全库108篇笔记汇总'], 'related': ['文山州总览', '核心数据速查', '[[../01-地理与自然环境/ ... (355 characters truncated) ... ]', '[[../ai-hub/素材卡片集]]', '[[../ai-hub/风格指南]]', '[[../ai-hub/合规指南]]', '[[../ai-hub/IP故事库]]', '[[../blueprint/架构总览]]', '[[../blueprint/mvp/README]]']}, 1, '00-总览\\文山KB总索引.md', '2026-05-30')]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+   ✓ ERROR    00-总览\文山州总览.md  →  (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $5: {'tags': ['总览', '核心数据'], 'created': date... ('dict' object has no attribute 'encode')
+[SQL: 
+            INSERT INTO notes (title, slug, content, plain_text, frontmatter,
+                               category_id, status, source_path, source_type,
+                               created_at)
+            VALUES ($1, $2, $3, $4, $5,
+                    $6, 'published', $7, 'obsidian',
+                    COALESCE($8, NOW()))
+            RETURNING id
+        ]
+[parameters: ('文山州总览', '文山州总览', '# 文山壮族苗族自治州总览\n\n## 基本信息\n\n| 项目 | 内容 |\n|------|------|\n| 全称 | 文山壮族苗族自治州 |\n| 简称 | 文山州 |\n| 成立时间 | 1957年5月24日 |\n| 行政区划代码 | 532600 |\n| 政府驻地 | 文山市华 ... (1452 characters truncated) ... 款：1,149.96 亿元\n\n## 核心名片\n\n- **世界三七之乡** — 三七原产地和主产区\n- **中国绿色铝谷** — 绿色铝产能 343 万吨，占全国近 1/10\n- **普者黑 5A 景区** — 喀斯特山水田园风光\n- **老山精神** — 对越自卫还击战的英雄之地\n', '文山壮族苗族自治州总览\n\n基本信息\n\n| 项目 | 内容 |\n\n| 全称 | 文山壮族苗族自治州 |\n| 简称 | 文山州 |\n| 成立时间 | 1957年5月24日 |\n| 行政区划代码 | 532600 |\n| 政府驻地 | 文山市华龙北路2号 |\n| 下辖 | 1县级市 ... (1276 characters truncated) ... 7.06 亿元（+7.7%）\n- 住户存款：1,149.96 亿元\n\n核心名片\n\n- 世界三七之乡 — 三七原产地和主产区\n- 中国绿色铝谷 — 绿色铝产能 343 万吨，占全国近 1/10\n- 普者黑 5A 景区 — 喀斯特山水田园风光\n- 老山精神 — 对越自卫还击战的英雄之地', {'tags': ['总览', '核心数据'], 'created': datetime.date(2026, 5, 24), 'confidence': '低', 'sources': ['政府公开数据 | 地方志'], 'related': ['01-地理与自然环境/地理概况', '02-历史沿 ... (186 characters truncated) ... [../08-交通与基础设施/_索引]]', '[[../09-政策与治理/_索引]]', '[[../10-社会民生/_索引]]', '[[../synthesis/文山经济全景]]', '[[../synthesis/文山文旅地图]]', '[[../synthesis/文山发展时间线]]']}, 1, '00-总览\\文山州总览.md', '2026-05-24')]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+   ✓ ERROR    00-总览\文山州概况.md  →  (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $5: {'tags': ['总览', '数据'], 'created': dateti... ('dict' object has no attribute 'encode')
+[SQL: 
+            INSERT INTO notes (title, slug, content, plain_text, frontmatter,
+                               category_id, status, source_path, source_type,
+                               created_at)
+            VALUES ($1, $2, $3, $4, $5,
+                    $6, 'published', $7, 'obsidian',
+                    COALESCE($8, NOW()))
+            RETURNING id
+        ]
+[parameters: ('文山州概况', '文山州概况', '# 文山壮族苗族自治州概况（2025年更新）\n\n> 数据来源：**文山州2025年国民经济和社会发展统计公报**（文山州统计局，2025年4月发布）\n> 最新更新：2026年6月 — 补充十五五战略定位与目标展望\n\n## 战略定位（"3+3"发展定位）\n\n迈入"十五五"，文山州确立  ... (2534 characters truncated) ... 亿元）\n- 绿色铝培育为**首个千亿级产业**（2025年产值突破 1000 亿元）\n- 文山三七入选**全国优势特色产业集群**和**全国中小企业特色产业集群**\n- 创成**全国民族团结进步示范州**、**全国双拥模范城**\n- 石漠化治理经验获评**第五届全球最佳生态减贫案例**\n', '文山壮族苗族自治州概况（2025年更新）\n\n数据来源：文山州2025年国民经济和社会发展统计公报（文山州统计局，2025年4月发布）\n最新更新：2026年6月 — 补充十五五战略定位与目标展望\n\n战略定位（"3+3"发展定位）\n\n迈入"十五五"，文山州确立 "3+3"发展定位（202 ... (2223 characters truncated) ... 亿元（2025年，统计口径 GDP 1632.64 亿元）\n- 绿色铝培育为首个千亿级产业（2025年产值突破 1000 亿元）\n- 文山三七入选全国优势特色产业集群和全国中小企业特色产业集群\n- 创成全国民族团结进步示范州、全国双拥模范城\n- 石漠化治理经验获评第五届全球最佳生态减贫案例', {'tags': ['总览', '数据'], 'created': datetime.date(2026, 5, 24), 'updated': datetime.date(2026, 6, 11), 'sources': ['https://tjgb.hongheiku.com/djs/61421 ... (162 characters truncated) ... ', '../05-经济发展/经济概况2025', '../04-人口与民族/民族构成', '[[文山州总览]]', '[[核心数据速查]]', '[[../01-地理与自然环境/地理概况]]', '[[../04-人口与民族/人口概况]]', '[[../05-经济发展/经济概况2025]]']}, 1, '00-总览\\文山州概况.md', '2026-05-24')]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+   ✓ ERROR    00-总览\核心数据速查.md  →  (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $5: {'tags': ['总览', '数据', '速查'], 'created': ... ('dict' object has no attribute 'encode')
+[SQL: 
+            INSERT INTO notes (title, slug, content, plain_text, frontmatter,
+                               category_id, status, source_path, source_type,
+                               created_at)
+            VALUES ($1, $2, $3, $4, $5,
+                    $6, 'published', $7, 'obsidian',
+                    COALESCE($8, NOW()))
+            RETURNING id
+        ]
+[parameters: ('核心数据速查', '核心数据速查', '# 文山州核心数据速查\n\n## 2025年关键数据\n\n- GDP：**1632.64 亿元**（+5.3%）\n- 第一产业：273.23 亿元 | 第二产业：587.23 亿元 | 第三产业：772.19 亿元\n- 常住人口：335.4 万（2025年末） [置信度: 中]\n- 绿色 ... (1594 characters truncated) ... 一季度） | **77.43 亿元**（2026年Q1季度值，全年锚点456亿） | 同比 +4.48% |\n| 旅居人数（2025年） | **16.63 万人** | 同比 +49.82% |\n| 招商引资签约（1-4月） | **28 个项目** | 协议总投资 27.81 亿元 |\n', '文山州核心数据速查\n\n2025年关键数据\n\n- GDP：1632.64 亿元（+5.3%）\n- 第一产业：273.23 亿元 | 第二产业：587.23 亿元 | 第三产业：772.19 亿元\n- 常住人口：335.4 万（2025年末） [置信度: 中]\n- 绿色铝产能：343 万 ... (1325 characters truncated) ... \n| 三七中药材综合产值（一季度） | 77.43 亿元（2026年Q1季度值，全年锚点456亿） | 同比 +4.48% |\n| 旅居人数（2025年） | 16.63 万人 | 同比 +49.82% |\n| 招商引资签约（1-4月） | 28 个项目 | 协议总投资 27.81 亿元 |', {'tags': ['总览', '数据', '速查'], 'created': datetime.date(2026, 5, 24), 'updated': datetime.date(2026, 6, 11), 'confidence': '低', 'sources': ['政府统计年鉴'], ' ... (99 characters truncated) ... 口与民族/_索引]]', '[[../05-经济发展/_索引]]', '[[../06-文化旅游/_索引]]', '[[../07-特产与资源/_索引]]', '[[../08-交通与基础设施/_索引]]', '[[../09-政策与治理/_索引]]', '[[../10-社会民生/_索引]]']}, 1, '00-总览\\核心数据速查.md', '2026-05-24')]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+   ✓ ERROR    01-地理与自然环境\_MOC.md  →  (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $5: {'tags': ['地理', '自然环境', 'MOC', '导航'], 'c... ('dict' object has no attribute 'encode')
+[SQL: 
+            INSERT INTO notes (title, slug, content, plain_text, frontmatter,
+                               category_id, status, source_path, source_type,
+                               created_at)
+            VALUES ($1, $2, $3, $4, $5,
+                    $6, 'published', $7, 'obsidian',
+                    COALESCE($8, NOW()))
+            RETURNING id
+        ]
+[parameters: ('_MOC', '-MOC', '\n# 01-地理与自然环境\n\n文山州地处云南省东南部，典型的喀斯特岩溶地貌区。本分类涵盖地理概况、地貌特征和气候条件。\n\n## 笔记列表\n\n- [[地理概况]] — 区位、面积、地形地貌总览\n- [[喀斯特地貌]] — 岩溶地貌特征与分布\n- [[气候特征]] — 气候类型、气温降水等\n- [[_索引]] — 本目录原始索引\n\n## 交叉入口\n\n- 行政区划 → [[03-行政区划/_MOC]]\n- 特产资源 → [[07-特产与资源/_MOC]]\n- 文旅旅游 → [[06-文化旅游/_MOC]]', '01-地理与自然环境\n\n文山州地处云南省东南部，典型的喀斯特岩溶地貌区。本分类涵盖地理概况、地貌特征和气候条件。\n\n笔记列表\n\n- 地理概况 — 区位、面积、地形地貌总览\n- 喀斯特地貌 — 岩溶地貌特征与分布\n- 气候特征 — 气候类型、气温降水等\n- _索引 — 本目录原始索引\n\n交叉入口\n\n- 行政区划 → 03-行政区划/_MOC\n- 特产资源 → 07-特产与资源/_MOC\n- 文旅旅游 → 06-文化旅游/_MOC', {'tags': ['地理', '自然环境', 'MOC', '导航'], 'created': datetime.date(2026, 5, 24), 'updated': datetime.date(2026, 5, 29), 'related': ['[[地理概况]]', '[[喀斯特地貌]]', '[[气候特征]]', '[[03-行政区划/_MOC]]', '[[07-特产与资源/_MOC]]', '[[06-文化旅游/_MOC]]'], 'sources': []}, 2, '01-地理与自然环境\\_MOC.md', '2026-05-24')]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+   ✓ ERROR    01-地理与自然环境\_索引.md  →  (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $5: {'tags': ['MOC', '索引'], 'created': datet... ('dict' object has no attribute 'encode')
+[SQL: 
+            INSERT INTO notes (title, slug, content, plain_text, frontmatter,
+                               category_id, status, source_path, source_type,
+                               created_at)
+            VALUES ($1, $2, $3, $4, $5,
+                    $6, 'published', $7, 'obsidian',
+                    COALESCE($8, NOW()))
+            RETURNING id
+        ]
+[parameters: ('_索引', '-索引', '\n# 01-地理与自然环境 · 索引\n\n- [[喀斯特地貌]]\n- [[地理概况]]\n- [[气候特征]]\n- [[气候特征深度]]\n- [[水系与河流]]\n- [[生物多样性]]\n- [[石漠化治理]]\n- [[自然灾害]]\n- [[西畴精神]]\n- [[普者黑湿地生态系统与保护]]\n- [[矿产资源概况]]\n- [[自然保护区体系]]\n', '01-地理与自然环境 · 索引\n\n- 喀斯特地貌\n- 地理概况\n- 气候特征\n- 气候特征深度\n- 水系与河流\n- 生物多样性\n- 石漠化治理\n- 自然灾害\n- 西畴精神\n- 普者黑湿地生态系统与保护\n- 矿产资源概况\n- 自然保护区体系', {'tags': ['MOC', '索引'], 'created': datetime.date(2026, 5, 24), 'updated': datetime.date(2026, 6, 5), 'confidence': '低', 'sources': []}, 2, '01-地理与自然环境\\_索引.md', '2026-05-24')]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+   ✓ ERROR    01-地理与自然环境\喀斯特地貌.md  →  (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $5: {'tags': ['地理', '喀斯特', '旅游', '石漠化', '深度'... ('dict' object has no attribute 'encode')
+[SQL: 
+            INSERT INTO notes (title, slug, content, plain_text, frontmatter,
+                               category_id, status, source_path, source_type,
+                               created_at)
+            VALUES ($1, $2, $3, $4, $5,
+                    $6, 'published', $7, 'obsidian',
+                    COALESCE($8, NOW()))
+            RETURNING id
+        ]
+[parameters: ('喀斯特地貌', '喀斯特地貌', '\n# 喀斯特地貌\n\n## 一、总体特征\n\n文山州地处**滇东南喀斯特高原**，是云南省乃至中国西南岩溶地貌最集中、发育最典型的区域。属中国南方喀斯特世界自然遗产的辐射区，岩溶地貌占全州面积的 **53.4%**。\n\n| 指标 | 数值 | 说明 |\n|------|------|- ... (2043 characters truncated) ... 斯特地貌与气候的相互作用\n- [[../06-文化旅游/普者黑]] — 喀斯特峰林湖群景区\n- [[../06-文化旅游/坝美]] — 喀斯特溶洞村落\n\n> **数据来源**：云南省岩溶地区石漠化综合治理规划、文山州自然资源和规划局、中国科学院西双版纳热带植物园喀斯特研究。置信度：中。\n', '喀斯特地貌\n\n一、总体特征\n\n文山州地处滇东南喀斯特高原，是云南省乃至中国西南岩溶地貌最集中、发育最典型的区域。属中国南方喀斯特世界自然遗产的辐射区，岩溶地貌占全州面积的 53.4%。\n\n| 指标 | 数值 | 说明 |\n\n| 全州国土面积 | 31,456 km² | — |\n ... (1732 characters truncated) ... 富集\n- 气候特征深度 — 喀斯特地貌与气候的相互作用\n- ../06-文化旅游/普者黑 — 喀斯特峰林湖群景区\n- ../06-文化旅游/坝美 — 喀斯特溶洞村落\n\n数据来源：云南省岩溶地区石漠化综合治理规划、文山州自然资源和规划局、中国科学院西双版纳热带植物园喀斯特研究。置信度：中。', {'tags': ['地理', '喀斯特', '旅游', '石漠化', '深度'], 'created': datetime.date(2026, 5, 24), 'updated': datetime.date(2026, 6, 7), 'confidence': '中', 'sources':  ... (79 characters truncated) ... 石漠化治理]]', '[[西畴精神]]', '[[矿产资源概况]]', '[[../06-文化旅游/普者黑]]', '[[../06-文化旅游/坝美]]', '[[../06-文化旅游/更多景点]]', '[[../03-行政区划/丘北县深度]]', '[[../03-行政区划/广南县深度]]']}, 2, '01-地理与自然环境\\喀斯特地貌.md', '2026-05-24')]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+   ✓ ERROR    01-地理与自然环境\地理概况.md  →  (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $5: {'tags': ['地理', '自然环境'], 'created': date... ('dict' object has no attribute 'encode')
+[SQL: 
+            INSERT INTO notes (title, slug, content, plain_text, frontmatter,
+                               category_id, status, source_path, source_type,
+                               created_at)
+            VALUES ($1, $2, $3, $4, $5,
+                    $6, 'published', $7, 'obsidian',
+                    COALESCE($8, NOW()))
+            RETURNING id
+        ]
+[parameters: ('地理概况', '地理概况', '# 地理概况\n\n## 位置与面积\n\n文山州位于云南省东南部，地理坐标约 23°24′N，104°12′E。\n\n- 东接广西百色市\n- 西邻红河哈尼族彝族自治州\n- 北连曲靖市\n- 南与越南社会主义共和国接界（麻栗坡、马关、富宁3县）\n\n总面积 31,456 平方公里，在云南省 ... (288 characters truncated) ... ---------|\n| 文山市 | 2,967 |\n| 砚山县 | 3,869 |\n| 西畴县 | 1,491 |\n| 麻栗坡县 | 2,358 |\n| 马关县 | 2,666 |\n| 丘北县 | 5,038 |\n| 广南县 | 7,730 |\n| 富宁县 | 5,290 |\n', '地理概况\n\n位置与面积\n\n文山州位于云南省东南部，地理坐标约 23°24′N，104°12′E。\n\n- 东接广西百色市\n- 西邻红河哈尼族彝族自治州\n- 北连曲靖市\n- 南与越南社会主义共和国接界（麻栗坡、马关、富宁3县）\n\n总面积 31,456 平方公里，在云南省 16 个 ... (235 characters truncated) ...  面积（km²） |\n\n| 文山市 | 2,967 |\n| 砚山县 | 3,869 |\n| 西畴县 | 1,491 |\n| 麻栗坡县 | 2,358 |\n| 马关县 | 2,666 |\n| 丘北县 | 5,038 |\n| 广南县 | 7,730 |\n| 富宁县 | 5,290 |', {'tags': ['地理', '自然环境'], 'created': datetime.date(2026, 5, 24), 'confidence': '低', 'sources': ['地理文献 | 政府公开数据'], 'related': ['../00-总览/文山州总览', '[[../0 ... (226 characters truncated) ... /03-行政区划/麻栗坡县深度.md]]', '[[../06-文化旅游/坝美.md]]', '[[../06-文化旅游/普者黑.md]]', '[[../06-文化旅游/更多景点.md]]', '[[../06-文化旅游/砚山康养.md]]', '[[../06-文化旅游/老山圣地.md]]']}, 2, '01-地理与自然环境\\地理概况.md', '2026-05-24')]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+   ✓ ERROR    01-地理与自然环境\普者黑湿地生态系统与保护.md  →  (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $5: {'tags': ['地理', '湿地', '普者黑', '生态保护', '喀斯... ('dict' object has no attribute 'encode')
+[SQL: 
+            INSERT INTO notes (title, slug, content, plain_text, frontmatter,
+                               category_id, status, source_path, source_type,
+                               created_at)
+            VALUES ($1, $2, $3, $4, $5,
+                    $6, 'published', $7, 'obsidian',
+                    COALESCE($8, NOW()))
+            RETURNING id
+        ]
+[parameters: ('普者黑湿地生态系统与保护', '普者黑湿地生态系统与保护', '\n# 普者黑湿地生态系统与保护\n\n## 一、概况\n\n普者黑湿地位于丘北县境内，是中国南方**罕见的喀斯特高原湿地**。湿地总面积约 **6 万亩（40 km²）**，是云南省最大的高原喀斯特湿地之一。2011 年正式获批为国家湿地公园，2020 年升级为国家 5A 级旅游景区。\n\n# ... (2175 characters truncated) ...  搭建"数字孪生湿地"平台，AI 预警生态风险 |\n| 生态补偿 | 建立流域上下游生态补偿机制 |\n| 碳中和湿地 | 启动湿地碳汇计量与交易试点 |\n\n---\n\n> **数据来源**：普者黑国家湿地公园总体规划、文山州林草局年度监测报告、丘北县生态环境分局公开数据。置信度：高。\n', '普者黑湿地生态系统与保护\n\n一、概况\n\n普者黑湿地位于丘北县境内，是中国南方罕见的喀斯特高原湿地。湿地总面积约 6 万亩（40 km²），是云南省最大的高原喀斯特湿地之一。2011 年正式获批为国家湿地公园，2020 年升级为国家 5A 级旅游景区。\n\n二、湿地结构\n\n| 组成部分 ... (1809 characters truncated) ... | 智慧监测 | 搭建"数字孪生湿地"平台，AI 预警生态风险 |\n| 生态补偿 | 建立流域上下游生态补偿机制 |\n| 碳中和湿地 | 启动湿地碳汇计量与交易试点 |\n\n---\n\n数据来源：普者黑国家湿地公园总体规划、文山州林草局年度监测报告、丘北县生态环境分局公开数据。置信度：高。', {'tags': ['地理', '湿地', '普者黑', '生态保护', '喀斯特湿地'], 'created': datetime.date(2026, 6, 5), 'updated': datetime.date(2026, 6, 5), 'sources': ['普者黑国家湿地公园总体规划' ... (9 characters truncated) ... 护规划（2021-2035）', '文山州林草局公开数据'], 'confidence': '高', 'related': ['[[地理概况]]', '[[喀斯特地貌]]', '[[生物多样性]]', '[[水系与河流]]', '[[气候特征深度]]', '[[../06-文化旅游/普者黑]]']}, 2, '01-地理与自然环境\\普者黑湿地生态系统与保护.md', '2026-06-05')]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+   ✓ ERROR    01-地理与自然环境\气候特征.md  →  (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $5: {'tags': ['地理', '气候'], 'created': dateti... ('dict' object has no attribute 'encode')
+[SQL: 
+            INSERT INTO notes (title, slug, content, plain_text, frontmatter,
+                               category_id, status, source_path, source_type,
+                               created_at)
+            VALUES ($1, $2, $3, $4, $5,
+                    $6, 'published', $7, 'obsidian',
+                    COALESCE($8, NOW()))
+            RETURNING id
+        ]
+[parameters: ('气候特征', '气候特征', '\n# 气候特征\n\n## 气候类型\n\n- 文山市、富宁县等低海拔区：**南亚热带湿润气候**\n- 砚山、丘北等中海拔区：**中亚热带湿润气候**\n- 北回归线横贯中部，70% 地区属亚热带，30% 属温带\n- 整体特征：**冬无严寒，夏无酷暑**，干湿季分明，立体气候显著\n\n## ... (1517 characters truncated) ... 响烤烟移栽、冬春连旱威胁八角产量 |\n| **旅游** | 冬暖夏凉，适宜全年旅游，康养避寒优势突出 | 6—8 月暴雨多影响户外景区安全 |\n\n> **来源**：中国气象数据网 1991—2020 气候标准值；文山州气象局历年公报（2023—2024）；云南省气候中心监测数据。置信度：中。', '气候特征\n\n气候类型\n\n- 文山市、富宁县等低海拔区：南亚热带湿润气候\n- 砚山、丘北等中海拔区：中亚热带湿润气候\n- 北回归线横贯中部，70% 地区属亚热带，30% 属温带\n- 整体特征：冬无严寒，夏无酷暑，干湿季分明，立体气候显著\n\n1991—2020 气候标准值（30 年平 ... (1206 characters truncated) ... 蔗等热作 | 春旱影响烤烟移栽、冬春连旱威胁八角产量 |\n| 旅游 | 冬暖夏凉，适宜全年旅游，康养避寒优势突出 | 6—8 月暴雨多影响户外景区安全 |\n\n来源：中国气象数据网 1991—2020 气候标准值；文山州气象局历年公报（2023—2024）；云南省气候中心监测数据。置信度：中。', {'tags': ['地理', '气候'], 'created': datetime.date(2026, 5, 24), 'updated': datetime.date(2026, 5, 30), 'confidence': '中', 'sources': ['中国气象数据网 | 1991-20 ... (268 characters truncated) ... 县深度.md]]', '[[../06-文化旅游/坝美.md]]', '[[../06-文化旅游/普者黑.md]]', '[[../06-文化旅游/更多景点.md]]', '[[../06-文化旅游/砚山康养.md]]', '[[../06-文化旅游/老山圣地.md]]', '[[自然灾害]]']}, 2, '01-地理与自然环境\\气候特征.md', '2026-05-24')]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+   ✓ ERROR    01-地理与自然环境\气候特征深度.md  →  (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $5: {'tags': ['地理', '气候', '自然环境'], 'created'... ('dict' object has no attribute 'encode')
+[SQL: 
+            INSERT INTO notes (title, slug, content, plain_text, frontmatter,
+                               category_id, status, source_path, source_type,
+                               created_at)
+            VALUES ($1, $2, $3, $4, $5,
+                    $6, 'published', $7, 'obsidian',
+                    COALESCE($8, NOW()))
+            RETURNING id
+        ]
+[parameters: ('气候特征深度', '气候特征深度', '# 气候特征深度\n\n## 总体概述\n\n文山壮族苗族自治州地处云贵高原东南部，北回归线横贯全境，属典型的**亚热带湿润季风气候**。因地形复杂，海拔从百余米到近三千米，形成了 **"一山有四季，十里不同天"** 的立体气候特征。\n\n## 核心气候指标\n\n| 指标 | 全州范围 | 州 ... (1187 characters truncated) ... 七、烤烟、辣椒，高海拔区适合中药材、冷凉蔬菜\n- **康养旅居**：年均温 12～23℃、日照充足、空气湿度适中，是理想的康养旅居目的地\n- **风险**：季风气候 + 台风影响，旱涝急转风险突出，需加强防灾减灾\n\n> **数据来源**：文山州气候数据综合报告、云南省气候区划。置信度：中。', '气候特征深度\n\n总体概述\n\n文山壮族苗族自治州地处云贵高原东南部，北回归线横贯全境，属典型的亚热带湿润季风气候。因地形复杂，海拔从百余米到近三千米，形成了 "一山有四季，十里不同天" 的立体气候特征。\n\n核心气候指标\n\n| 指标 | 全州范围 | 州府文山市（参考） |\n\n|  ... (908 characters truncated) ... 适合热带水果，中海拔区适合三七、烤烟、辣椒，高海拔区适合中药材、冷凉蔬菜\n- 康养旅居：年均温 12～23℃、日照充足、空气湿度适中，是理想的康养旅居目的地\n- 风险：季风气候 + 台风影响，旱涝急转风险突出，需加强防灾减灾\n\n数据来源：文山州气候数据综合报告、云南省气候区划。置信度：中。', {'tags': ['地理', '气候', '自然环境'], 'created': datetime.date(2026, 5, 25), 'updated': datetime.date(2026, 5, 25), 'sources': ['文山州气候数据综合报告', '云南省气候区划'], 'confidence': '中', 'related': ['地理概况', '[[喀斯特地貌]]', '[[自然灾害]]', '[[石漠化治理]]']}, 2, '01-地理与自然环境\\气候特征深度.md', '2026-05-25')]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+   ✓ ERROR    01-地理与自然环境\水系与河流.md  →  (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $5: {'tags': ['地理', '水系', '河流', '水力资源'], 'cr... ('dict' object has no attribute 'encode')
+[SQL: 
+            INSERT INTO notes (title, slug, content, plain_text, frontmatter,
+                               category_id, status, source_path, source_type,
+                               created_at)
+            VALUES ($1, $2, $3, $4, $5,
+                    $6, 'published', $7, 'obsidian',
+                    COALESCE($8, NOW()))
+            RETURNING id
+        ]
+[parameters: ('水系与河流', '水系与河流', '# 水系与河流\n\n## 流域格局\n\n文山州总面积约 3.15 万 km²，地势西北高、东南低，分属珠江、红河两大流域：\n\n| 流域 | 面积 | 占比 | 主要河流 |\n|------|------|------|----------|\n| **珠江流域** | 约 1.73 万  ... (1544 characters truncated) ...  | **106.6 万 kW**（至 2008 年前后） |\n| 开发程度 | 已近可开发量的一半 |\n\n**2025 年政策导向**：从"大规模开发"转向 **"生态优先、合理利用"**，严控高扬程提水工程。\n\n> **数据来源**：文山州水利志、珠江/红河流域水文资料。置信度：中。', '水系与河流\n\n流域格局\n\n文山州总面积约 3.15 万 km²，地势西北高、东南低，分属珠江、红河两大流域：\n\n| 流域 | 面积 | 占比 | 主要河流 |\n\n| 珠江流域 | 约 1.73 万 km² | 55% | 南盘江、清水江、驮娘江、西洋江 |\n| 红河流域 | 约  ... (1216 characters truncated) ... 54 万 kW |\n| 已开发装机 | 106.6 万 kW（至 2008 年前后） |\n| 开发程度 | 已近可开发量的一半 |\n\n2025 年政策导向：从"大规模开发"转向 "生态优先、合理利用"，严控高扬程提水工程。\n\n数据来源：文山州水利志、珠江/红河流域水文资料。置信度：中。', {'tags': ['地理', '水系', '河流', '水力资源'], 'created': datetime.date(2026, 5, 25), 'updated': datetime.date(2026, 5, 25), 'sources': ['文山州水利志', '珠江流域与红河流域水文资料'], 'confidence': '中', 'related': ['地理概况', '[[气候特征深度]]', '[[../05-经济发展/能源资源与电力]]', '[[自然灾害]]']}, 2, '01-地理与自然环境\\水系与河流.md', '2026-05-25')]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+   ✓ ERROR    01-地理与自然环境\生物多样性.md  →  (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $5: {'tags': ['地理', '生物多样性', '自然保护区', '老君山',... ('dict' object has no attribute 'encode')
+[SQL: 
+            INSERT INTO notes (title, slug, content, plain_text, frontmatter,
+                               category_id, status, source_path, source_type,
+                               created_at)
+            VALUES ($1, $2, $3, $4, $5,
+                    $6, 'published', $7, 'obsidian',
+                    COALESCE($8, NOW()))
+            RETURNING id
+        ]
+[parameters: ('生物多样性', '生物多样性', '# 生物多样性\n\n## 总体特征\n\n文山州地处北回归线南侧，核心保护区——云南文山国家级自然保护区（老君山片区）是滇东南生物多样性最集中的区域，被誉为 **"北回归线绿洲"** 和 **"天然物种基因库"**。\n\n## 云南文山国家级自然保护区\n\n| 项目 | 数据 |\n|--- ... (1188 characters truncated) ... 2023 年列入国家 **"兽类及鸟类重要栖息地"**\n- 两个"老君山"保护区体系：文山国家级（老君山片区）+ 老君山省级（马关、麻栗坡）\n- 持续发现格彩臂金龟（国家 Ⅱ 级昆虫）、长喙兰（濒危植物）等新记录\n\n> **数据来源**：文山国家级自然保护区科考报告、监测数据。置信度：中。', '生物多样性\n\n总体特征\n\n文山州地处北回归线南侧，核心保护区——云南文山国家级自然保护区（老君山片区）是滇东南生物多样性最集中的区域，被誉为 "北回归线绿洲" 和 "天然物种基因库"。\n\n云南文山国家级自然保护区\n\n| 项目 | 数据 |\n\n| 级别 | 国家级（2003 年晋 ... (937 characters truncated) ... 保护成效\n\n- 2023 年列入国家 "兽类及鸟类重要栖息地"\n- 两个"老君山"保护区体系：文山国家级（老君山片区）+ 老君山省级（马关、麻栗坡）\n- 持续发现格彩臂金龟（国家 Ⅱ 级昆虫）、长喙兰（濒危植物）等新记录\n\n数据来源：文山国家级自然保护区科考报告、监测数据。置信度：中。', {'tags': ['地理', '生物多样性', '自然保护区', '老君山', '珍稀物种'], 'created': datetime.date(2026, 5, 25), 'updated': datetime.date(2026, 5, 25), 'sources': ['云南文山国家级自然保护区科学考察报告', '老君山生物多样性监测数据'], 'confidence': '中', 'related': ['地理概况', '[[气候特征深度]]', '[[水系与河流]]', '[[喀斯特地貌]]']}, 2, '01-地理与自然环境\\生物多样性.md', '2026-05-25')]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+   ✓ ERROR    01-地理与自然环境\石漠化治理.md  →  (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $5: {'tags': ['地理', '石漠化', '生态治理', '西畴精神'], ... ('dict' object has no attribute 'encode')
+[SQL: 
+            INSERT INTO notes (title, slug, content, plain_text, frontmatter,
+                               category_id, status, source_path, source_type,
+                               created_at)
+            VALUES ($1, $2, $3, $4, $5,
+                    $6, 'published', $7, 'obsidian',
+                    COALESCE($8, NOW()))
+            RETURNING id
+        ]
+[parameters: ('石漠化治理', '石漠化治理', '# 石漠化治理\n\n## 石漠化概况\n\n文山州是滇黔桂石漠化集中连片特困地区的核心区域。\n\n| 指标 | 数据 |\n|------|------|\n| 岩溶地貌占全州面积 | **53.4%** |\n| 石漠化曾占岩溶面积 | **71.1%** |\n| 严重程度 | 全国石漠化 ... (1331 characters truncated) ... 、绿美建设等工作中持续发挥引领作用\n\n## 国家认可\n\n- 生态扶贫案例《"六子登科"降"石魔"》入选第五届 **"全球减贫最佳案例"**\n- 为全球生态治理与减贫事业贡献了"西畴样本"\n\n> **数据来源**：文山州石漠化治理成效报告、西畴县生态治理与经济社会发展数据。置信度：中。', '石漠化治理\n\n石漠化概况\n\n文山州是滇黔桂石漠化集中连片特困地区的核心区域。\n\n| 指标 | 数据 |\n\n| 岩溶地貌占全州面积 | 53.4% |\n| 石漠化曾占岩溶面积 | 71.1% |\n| 严重程度 | 全国石漠化最严重地区之一 |\n\n治理成效\n\n| 层面 |  ... (1069 characters truncated) ... 生动教材\n- 在乡村振兴、绿美建设等工作中持续发挥引领作用\n\n国家认可\n\n- 生态扶贫案例《"六子登科"降"石魔"》入选第五届 "全球减贫最佳案例"\n- 为全球生态治理与减贫事业贡献了"西畴样本"\n\n数据来源：文山州石漠化治理成效报告、西畴县生态治理与经济社会发展数据。置信度：中。', {'tags': ['地理', '石漠化', '生态治理', '西畴精神'], 'created': datetime.date(2026, 5, 25), 'updated': datetime.date(2026, 5, 25), 'sources': ['文山州石漠化治理成效报告', '西畴县生态治理与经济社会发展数据'], 'confidence': '中', 'related': ['地理概况', '[[喀斯特地貌]]', '[[../03-行政区划/西畴县深度]]', '[[自然灾害]]', '[[环保督察整改2026]]']}, 2, '01-地理与自然环境\\石漠化治理.md', '2026-05-25')]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+   ✓ ERROR    01-地理与自然环境\矿产资源概况.md  →  (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $5: {'tags': ['地理', '矿产资源', '矿业经济', '铝土矿', '... ('dict' object has no attribute 'encode')
+[SQL: 
+            INSERT INTO notes (title, slug, content, plain_text, frontmatter,
+                               category_id, status, source_path, source_type,
+                               created_at)
+            VALUES ($1, $2, $3, $4, $5,
+                    $6, 'published', $7, 'obsidian',
+                    COALESCE($8, NOW()))
+            RETURNING id
+        ]
+[parameters: ('矿产资源概况', '矿产资源概况', '\n# 矿产资源概况\n\n## 一、总体特征\n\n文山州地处滇东南成矿带，是云南省**矿产资源最富集**的州市之一。已发现矿产 **70 余种**，探明储量 **45 种**，其中铝土矿、锑矿、铟矿、锰矿、钨矿储量居全省乃至全国前列，素有"有色金属王国"和"铟都"之称。\n\n## 二、优势矿 ... (2518 characters truncated) ... cn\n- 云南省自然资源厅：矿产资源总体规划 — https://dnr.yn.gov.cn\n- 中国地质调查局：全国矿产资源潜力评价\n- 文山州自然资源和规划局：矿产资源管理公开数据\n- 中国有色金属工业协会：铝产业年度报告 — https://www.chinania.org.cn\n', '矿产资源概况\n\n一、总体特征\n\n文山州地处滇东南成矿带，是云南省矿产资源最富集的州市之一。已发现矿产 70 余种，探明储量 45 种，其中铝土矿、锑矿、铟矿、锰矿、钨矿储量居全省乃至全国前列，素有"有色金属王国"和"铟都"之称。\n\n二、优势矿种详表\n\n| 矿种 | 探明储量 | 全 ... (2102 characters truncated) ... v.cn\n- 云南省自然资源厅：矿产资源总体规划 — https://dnr.yn.gov.cn\n- 中国地质调查局：全国矿产资源潜力评价\n- 文山州自然资源和规划局：矿产资源管理公开数据\n- 中国有色金属工业协会：铝产业年度报告 — https://www.chinania.org.cn', {'tags': ['地理', '矿产资源', '矿业经济', '铝土矿', '锑矿', '锰矿', '深度'], 'created': datetime.date(2026, 6, 5), 'updated': datetime.date(2026, 6, 5), 'sources': ['文山州 ... (87 characters truncated) ...  ['[[地理概况]]', '[[喀斯特地貌]]', '[[../05-经济发展/绿色铝产业深度]]', '[[../03-行政区划/砚山县深度]]', '[[../03-行政区划/马关县深度]]', '[[../03-行政区划/麻栗坡县深度]]', '[[../03-行政区划/富宁县深度]]']}, 2, '01-地理与自然环境\\矿产资源概况.md', '2026-06-05')]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+   ✓ ERROR    01-地理与自然环境\自然保护区体系.md  →  (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $5: {'tags': ['地理', '自然保护区', '老君山', '普者黑', '... ('dict' object has no attribute 'encode')
+[SQL: 
+            INSERT INTO notes (title, slug, content, plain_text, frontmatter,
+                               category_id, status, source_path, source_type,
+                               created_at)
+            VALUES ($1, $2, $3, $4, $5,
+                    $6, 'published', $7, 'obsidian',
+                    COALESCE($8, NOW()))
+            RETURNING id
+        ]
+[parameters: ('自然保护区体系', '自然保护区体系', '\n# 自然保护区体系\n\n## 一、概述\n\n文山州位于滇东南生物多样性热点地区，保护区体系涵盖**森林、湿地、地质遗迹**三大类型，总面积占全州国土面积 **8.5%** 以上。其中文山国家级自然保护区（老君山片区）是北回归线上保存最完好的常绿阔叶林生态系统之一。\n\n## 二、保护区一 ... (2001 characters truncated) ... 护区一体化智能监测平台 |\n| 社区共管 | 推广社区参与式保护，生态补偿覆盖全部保护区内社区 |\n| 极小种群 | 华盖木、毛枝五针松野外回归工程 |\n\n---\n\n> **数据来源**：文山州林草局、云南省自然保护区名录（2025版）、文山国家级自然保护区管理局年报。置信度：高。\n', '自然保护区体系\n\n一、概述\n\n文山州位于滇东南生物多样性热点地区，保护区体系涵盖森林、湿地、地质遗迹三大类型，总面积占全州国土面积 8.5% 以上。其中文山国家级自然保护区（老君山片区）是北回归线上保存最完好的常绿阔叶林生态系统之一。\n\n二、保护区一览表\n\n| 序号 | 名称 |  ... (1703 characters truncated) ... 护区 | 全州保护区一体化智能监测平台 |\n| 社区共管 | 推广社区参与式保护，生态补偿覆盖全部保护区内社区 |\n| 极小种群 | 华盖木、毛枝五针松野外回归工程 |\n\n---\n\n数据来源：文山州林草局、云南省自然保护区名录（2025版）、文山国家级自然保护区管理局年报。置信度：高。', {'tags': ['地理', '自然保护区', '老君山', '普者黑', '生态保护', '深度'], 'created': datetime.date(2026, 6, 5), 'updated': datetime.date(2026, 6, 5), 'sources': ['云南省自然保护 ... (16 characters truncated) ... 州林草局保护区管理数据', '文山国家级自然保护区总体规划'], 'confidence': '高', 'related': ['[[生物多样性]]', '[[喀斯特地貌]]', '[[普者黑湿地生态系统与保护]]', '[[石漠化治理]]', '[[水系与河流]]', '[[矿产资源概况]]']}, 2, '01-地理与自然环境\\自然保护区体系.md', '2026-06-05')]
+(Background on this error at: https://sqlalche.me/e/20/dbapi)
+   ✓ ERROR    01-地理与自然环境\自然灾害.md  →  (sqlalchemy.dialects.postgresql.asyncpg.Error) <class 'asyncpg.exceptions.DataError'>: invalid input for query argument $5: {'tags': ['地理', '自然灾害', '地震', '泥石流', '防灾... ('dict' object has no attribute 'encode')
+[SQL: 
+            INSERT INTO notes (title, slug, content, plain_text, frontmatter,
+                               category_id, status, source_path, source_type,
+                               created_at)
+            VALUES (
+
+[… truncated 140094 chars …]

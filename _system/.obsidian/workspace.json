@@ -1,0 +1,21 @@
+{
+  "main": {
+    "type": "split",
+    "children": [
+      {
+        "type": "tabs",
+        "children": [
+          {
+            "type": "leaf",
+            "state": {
+              "type": "markdown",
+              "state": {
+                "file": "_system/总索引.md"
+              }
+            }
+          }
+        ]
+      }
+    ]
+  }
+}

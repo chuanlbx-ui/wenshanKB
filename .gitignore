@@ -1,50 +1,32 @@
-# ── Python ──
-__pycache__/
-*.pyc
-*.pyo
-.venv/
-venv/
+# 数据库
+*.sqlite3
+*.db
+*.sqlite
 
-# ── 环境变量（保留 .env.example）──
-.env
-
-# ── Node.js ──
-node_modules/
+# 构建产物
 .next/
-out/
+.cache/
+node_modules/
 
-# ── Docker volumes ──
-pgdata/
-redis_data/
+# 临时脚本
+start_*.sh
+site/
+kb.db
 
-# ── IDE ──
-.vscode/
-.idea/
-*.swp
-*.swo
-
-# ── Obsidian 个人配置 ──
-.obsidian/
-.wiki-cache.json
-.wiki-schema.md
-
-# ── 旧备份 ──
-_system/
-backup_2025/
-backup_2025_v2/
-temp/
-
-# ── 工具生成 ──
-.reasonix/
-
-# ── 大文件 ──
-*.pdf
-output/publish/
-
-# ── 日志 ──
-*.log
-
-# ── OS ──
-.DS_Store
-Thumbs.db
-celerybeat-schedule*
+# 构建清单
+BUILD_ID
+app-build-manifest.json
+app-path-routes-manifest.json
+build-manifest.json
+build.tar.gz
+export-marker.json
+images-manifest.json
+next-minimal-server.js.nft.json
+next-server.js.nft.json
+prerender-manifest.json
+react-loadable-manifest.json
+required-server-files.json
+routes-manifest.json
+trace
+static/
+cache/
