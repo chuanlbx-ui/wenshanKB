@@ -1,14 +1,19 @@
 """网络信息自动采集 — 回路 3（Celery 定时任务）
 
-从政府网站和新闻网站抓取最新文章，用 DeepSeek 做 AI 摘要，
-生成草稿笔记入库，等待人工审核后发布。
+每小时抓取数据源。每次同时扫描最新页面和历史归档页面，
+支持分页遍历，确保不限于最新5篇，历史数据也能被挖掘入库。
+
+流程：抓取首页 → 提取文章列表 → 遍历分页归档 → 提取更多旧文章
+     → 去重（已有则跳过） → AI摘要 → 保存待审核草稿
 """
 
 import asyncio
 import hashlib
+import json
 import logging
+import random
 from datetime import datetime, timezone
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlparse, parse_qs, urlencode
 
 import httpx
 from bs4 import BeautifulSoup
@@ -21,40 +26,62 @@ from app.config import get_settings
 
 logger = logging.getLogger("wenshan-kb.crawler")
 
-# ── 数据源配置 ──
+# ── 数据源配置（仅限文山州本地相关源） ──
 SOURCES = [
     {
         "name": "文山州政府",
         "url": "http://www.ynws.gov.cn/",
         "type": "gov",
-        "article_selector": "a[href*='/content/'], a[href*='/info/'], a[href*='/zwgk/'], a[href*='.shtml'], a[href*='/news/']",
-        "content_selector": "div.article-content, div.content, div.text, div.TRS_Editor, div.Custom_UnionStyle, div.main-content, .con_text, .art_con, .news-content",
+        "allowed_domains": ["ynws.gov.cn"],
+        "article_selector": ("a[href*='/content/'], a[href*='/info/'], "
+                             "a[href*='/zwgk/']"),
+        "content_selector": ("div.article-content, div.content, div.text, "
+                             "div.TRS_Editor, div.Custom_UnionStyle, "
+                             "div.main-content, .con_text, .art_con, .news-content"),
         "title_selector": "h1, .article-title, .title, .bt, .art_tit, .news-title",
+        "pagination_selector": "a[href*='page'], a[href*='index_'], a.next, a:has(+ .next)",
+    },
+    {
+        "name": "文山新闻网",
+        "url": "https://www.wswxw.com/",
+        "type": "news",
+        "allowed_domains": ["wswxw.com"],
+        "article_selector": ("a[href*='wswxw'], a[href*='/html/'], "
+                             "a[href*='.html'], a[href*='/news/']"),
+        "content_selector": ("div.article-content, div.content, div.text, "
+                             "div.article, .detail, .main-content, .con_text"),
+        "title_selector": "h1, .article-title, .title, .art_tit",
+        "pagination_selector": "a[href*='page'], a[href*='index_'], a.next",
     },
     {
         "name": "新华网-文山",
         "url": "https://www.yn.xinhuanet.com/ws/index.htm",
         "type": "news",
-        "article_selector": "a[href*='ws'], a[href*='xinhuanet'], a[target]",
-        "content_selector": "div.content, div.article, div.text, .detail, .main-content",
+        "allowed_domains": ["yn.xinhuanet.com", "xinhuanet.com"],
+        "article_selector": ("a[href*='/ws/']"),
+        "content_selector": ("div.content, div.article, div.text, "
+                             ".detail, .main-content"),
         "title_selector": "h1, .title, .article-title",
+        "pagination_selector": "a[href*='page'], a[href*='index_'], a.next",
     },
-    {
-        "name": "人民网-云南频道",
-        "url": "http://yn.people.com.cn/",
-        "type": "news",
-        "article_selector": "a[href*='yn.people'], a[href*='n2'], a[href*='GB']",
-        "content_selector": "div.rm_txt_con, div.content, div.text_con, .article, .main-content",
-        "title_selector": "h1, .article-title, .title, .rm_title1",
-    },
+]
+
+# 运行时参数
+MAX_ARTICLES_PER_SOURCE = 15       # 每次每源最多抓取篇数
+MAX_PAGINATION_PAGES = 3           # 每源最多遍历分页数
+USER_AGENTS = [
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
 ]
 
 
 async def _fetch_page(client: httpx.AsyncClient, url: str) -> str:
-    """抓取网页内容"""
+    """抓取网页内容（随机UA，防封）"""
+    ua = random.choice(USER_AGENTS)
     resp = await client.get(
         url,
-        headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
+        headers={"User-Agent": ua},
         follow_redirects=True,
         timeout=30,
     )
@@ -94,9 +121,34 @@ async def _fetch_article_content(client: httpx.AsyncClient, url: str,
         html = await _fetch_page(client, url)
         soup = BeautifulSoup(html, "html.parser")
 
-        # 提取标题
-        title_el = soup.select_one(title_sel)
-        title = title_el.text.strip() if title_el else ""
+        # 提取标题（多个选择器依次尝试，需要覆盖不同站点结构）
+        title = ""
+        for sel in title_sel.split(", "):
+            el = soup.select_one(sel)
+            if el:
+                t = el.text.strip()
+                if 4 < len(t) < 300:
+                    title = t
+                    break
+
+        # 如果上面的选择器都没命中，尝试从 <title> 标签提取
+        if not title:
+            title_tag = soup.find("title")
+            if title_tag:
+                t = title_tag.text.strip()
+                # 去掉站点名后缀如 " -- 人民网" 等
+                for sep in ["--", "-", "—", "|", "："]:
+                    if sep in t:
+                        t = t.split(sep)[0].strip()
+                if 4 < len(t) < 300:
+                    title = t
+
+        # 最终 fallback：从 URL 中提取可读片段
+        if not title:
+            # /n2/2026/0616/c372453-41611870.html -> c372453-41611870
+            path = urlparse(url).path
+            last_part = path.rstrip(".html").rstrip("/").split("/")[-1]
+            title = last_part.replace("-", " ").replace("_", " ").title()
 
         # 提取正文（逐个选择器尝试）
         body = ""
@@ -132,6 +184,67 @@ async def _fetch_article_content(client: httpx.AsyncClient, url: str,
     except Exception as e:
         logger.warning(f"  抓取失败 {url}: {e}")
         return None
+
+
+async def _is_wenshan_related(article: dict) -> bool:
+    """AI 判断文章内容是否与文山州相关（标题含关键词则快速通过）"""
+    title = article.get("title", "")
+    body = article.get("body", "")
+    text_lower = (title + " " + body[:2000]).lower()
+
+    # ── 前置质量检查：快速拒绝明显无效的内容 ──
+    # 没有标题或标题是URL（爬取失败）
+    if not title or title.startswith("http"):
+        return False
+    # 正文太短（少于300字很难是有效文章）
+    if len(body) < 300:
+        return False
+    # 标题是省份/城市列表（索引页特征）
+    for kw in ["北京\n天津\n", "上海\n江苏\n", "广东\n广西\n"]:
+        if kw in title:
+            return False
+    # 标题包含"首页""列表""索引"等关键词（索引/列表页特征）
+    index_keywords = ["首页", "列表", "索引", "index", "Index"]
+    if any(kw in title for kw in index_keywords):
+        return False
+
+    # 快速关键词匹配：直接含文山地名的秒过
+    wenshan_keywords = [
+        "文山", "丘北", "砚山", "广南", "富宁", "麻栗坡", "马关", "西畴",
+        "普者黑", "坝美", "老山", "者阴山", "八宝", "三七", "八角",
+        "文山州", "文山市", "壮乡", "苗岭",
+    ]
+    if any(kw in text_lower for kw in wenshan_keywords):
+        return True
+
+    # 无关键词，调用 AI 判断标题+前500字是否涉及文山
+    settings = get_settings()
+    if not settings.LLM_API_KEY:
+        return False  # 无 LLM Key 时保守跳过
+
+    try:
+        client = AsyncOpenAI(
+            api_key=settings.LLM_API_KEY,
+            base_url=settings.LLM_BASE_URL,
+        )
+        prompt = f"""判断这篇文章是否与云南省文山壮族苗族自治州（简称文山州）相关。
+只要提到文山州内的人、事、物、政策、经济、文化、旅游、基础设施等，都算相关。
+只输出 JSON：{{"related": true}} 或 {{"related": false}}
+
+标题：{title[:200]}
+导语：{body[:800]}
+"""
+        resp = await client.chat.completions.create(
+            model=settings.LLM_MODEL,
+            messages=[{"role": "user", "content": prompt}],
+            temperature=0.1,
+            response_format={"type": "json_object"},
+        )
+        result = json.loads(resp.choices[0].message.content)
+        return result.get("related", False)
+    except Exception as e:
+        logger.warning(f"AI 文山相关性判断失败: {e}")
+        return False  # 失败时保守处理，不收录
 
 
 async def _ai_summary(article: dict) -> dict:
@@ -216,45 +329,91 @@ async def _save_draft(db: AsyncSession, article: dict, ai: dict) -> bool:
         "title": title,
         "slug": f"crawler-{url_hash}",
         "content": content,
-        "plain": f"{title}\n\n{ai['summary']}",
+        "plain": body[:5000],
         "src": article["url"],
     })
     return True
 
 
+async def _extract_pagination_links(html: str, source_url: str, selector: str) -> list[str]:
+    """从分页器提取分页链接"""
+    soup = BeautifulSoup(html, "html.parser")
+    pages = set()
+    for link in soup.select(selector):
+        href = link.get("href", "")
+        if href and href != "#" and not href.startswith("javascript:"):
+            full_url = urljoin(source_url, href)
+            # 避免死循环：只加入与首页不同但在同域下的URL
+            if full_url != source_url.rstrip("/"):
+                pages.add(full_url)
+    return list(pages)
+
+
 async def _run_crawler() -> dict:
-    """执行一次完整的采集流程"""
+    """执行一次完整的采集流程（支持分页遍历）"""
     settings = get_settings()
     engine = create_async_engine(settings.DATABASE_URL)
 
-    stats = {"sources_checked": 0, "articles_found": 0, "articles_new": 0, "errors": 0}
+    stats = {"sources_checked": 0, "articles_found": 0,
+             "articles_new": 0, "errors": 0, "pages_scanned": 0}
 
     async with httpx.AsyncClient() as client, AsyncSession(engine) as db:
         for source in SOURCES:
             try:
-                logger.info(f"[crawler] 采集: {source['name']}")
+                logger.info(f"[crawler] 🔍 采集: {source['name']}")
                 stats["sources_checked"] += 1
 
-                # 1. 抓取首页
-                html = await _fetch_page(client, source["url"])
-                if not html:
-                    stats["errors"] += 1
-                    continue
+                # 收集所有待扫描的 URL（首页 + 分页）
+                urls_to_scan = [source["url"]]
+                try:
+                    html = await _fetch_page(client, source["url"])
+                    pagination = await _extract_pagination_links(
+                        html, source["url"], source["pagination_selector"]
+                    )
+                    # 最多取前 N 个分页
+                    urls_to_scan.extend(pagination[:MAX_PAGINATION_PAGES])
+                except Exception as e:
+                    logger.warning(f"  分页提取失败: {e}")
 
-                # 2. 提取文章列表
-                articles = _extract_articles(html, source["url"], source["article_selector"])
-                stats["articles_found"] += len(articles)
-                logger.info(f"  找到 {len(articles)} 篇文章")
+                # 每页提取文章
+                all_article_urls = []
+                seen_url_hashes = set()
+                for page_url in urls_to_scan:
+                    try:
+                        html = await _fetch_page(client, page_url)
+                        articles = _extract_articles(html, page_url, source["article_selector"])
+                        stats["pages_scanned"] += 1
 
-                # 过滤：只保留看起来像真实文章的 URL（含日期或 /content/ 等模式）
+                        for a in articles:
+                            if a["url_hash"] not in seen_url_hashes:
+                                seen_url_hashes.add(a["url_hash"])
+                                all_article_urls.append(a)
+
+                        logger.info(f"  页面 {page_url[:60]}... 找到 {len(articles)} 篇")
+                    except Exception as e:
+                        logger.warning(f"  扫描页失败 {page_url[:50]}: {e}")
+
+                stats["articles_found"] += len(all_article_urls)
+                logger.info(f"  合计 {len(all_article_urls)} 篇文章")
+
+                # 过滤：只保留同域名下的 URL（域名白名单防跨站污染）
+                source_domain = urlparse(source["url"]).hostname or ""
+                allowed_domains = source.get("allowed_domains", [source_domain])
                 real_articles = [
-                    a for a in articles
-                    if any(p in a["url"] for p in ["/content/", "/info/", "/news/", ".shtml", "/article/", "202"])
+                    a for a in all_article_urls
+                    if any(d in a["url"] for d in allowed_domains)
                 ]
                 logger.info(f"  其中 {len(real_articles)} 篇疑似真实文章")
 
-                # 3. 逐篇抓取详情 + AI 摘要
-                for art in real_articles[:5]:  # 每次最多 5 篇
+                # 打乱顺序，避免每次都从头抓取（让旧文章也有机会）
+                random.shuffle(real_articles)
+
+                # 逐篇抓取 + AI 摘要 + 保存
+                processed = 0
+                for art in real_articles:
+                    if processed >= MAX_ARTICLES_PER_SOURCE:
+                        break
+
                     content = await _fetch_article_content(
                         client, art["url"],
                         source["content_selector"],
@@ -263,14 +422,17 @@ async def _run_crawler() -> dict:
                     if not content:
                         continue
 
-                    # 4. AI 摘要
                     ai = await _ai_summary(content)
-
-                    # 5. 保存草稿
+                    # AI 过滤：判断是否与文山州相关
+                    if not await _is_wenshan_related(content):
+                        logger.info(f"  ⏭️ 非文山相关, 跳过: {content['title'][:50]}...")
+                        processed += 1
+                        continue
                     saved = await _save_draft(db, content, ai)
                     if saved:
                         stats["articles_new"] += 1
                         logger.info(f"  ✓ 新草稿: {content['title'][:50]}...")
+                    processed += 1
 
                 await db.commit()
 

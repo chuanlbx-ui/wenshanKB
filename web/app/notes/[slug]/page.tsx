@@ -14,7 +14,7 @@ import { fetchNote } from "@/lib/api";
 import { renderWikilinks } from "@/lib/wikilink";
 import { highlightText } from "@/lib/highlight";
 
-const API = "http://localhost:8000";
+const API = process.env.NEXT_PUBLIC_API_URL || "";
 
 function rewriteImages(content: string, sourcePath?: string): string {
   if (!sourcePath) return content;
@@ -132,7 +132,11 @@ export default function NoteDetailPage() {
       {tags.length > 0 && (
         <div className="flex flex-wrap gap-2 mb-6">
           {tags.map((tag) => (
-            <span key={tag} className="text-xs px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 dark:text-gray-500">#{tag}</span>
+            <Link
+              key={tag}
+              href={`/search?q=${encodeURIComponent(tag)}`}
+              className="text-xs px-2.5 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 dark:text-gray-500 hover:bg-primary/10 hover:text-primary transition-colors"
+            >#{tag}</Link>
           ))}
         </div>
       )}
@@ -148,41 +152,34 @@ export default function NoteDetailPage() {
             {note.frontmatter.sources.map((s: string, i: number) => (
               <li key={i} className="text-sm text-gray-500 dark:text-gray-400">
                 {s.startsWith('http') ? (
-                  <a href={s} target="_blank" rel="noopener" className="text-blue-500 hover:underline break-all">{s}</a>
-                ) : (
-                  <span>{s}</span>
-                )}
+                  <a href={s} target="_blank" rel="noopener noreferrer" className="hover:text-primary">{s}</a>
+                ) : s}
               </li>
             ))}
           </ul>
-          {note.created_at && (
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-3">
-              创建于 {new Date(note.created_at).toLocaleDateString("zh-CN")}
-            </p>
-          )}
         </section>
       )}
 
       {related.length > 0 && (
-        <section className="mt-16 pt-8 border-t">
-          <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-200 mb-4">📎 相关笔记</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <section className="mt-12 pt-8 border-t dark:border-gray-700">
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-200 mb-3">📎 相关笔记</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {related.map((r: any) => (
-              <Link key={r.id} href={`/notes/${encodeURIComponent(r.slug)}`}
-                className="block p-4 rounded-lg border border-gray-200 dark:border-gray-700 hover:border-blue-300 dark:hover:border-blue-600 hover:shadow-sm transition-all"
+              <Link key={r.slug} href={`/notes/${r.slug}`}
+                className="block p-4 rounded-lg border dark:border-gray-700 hover:border-primary/30 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
               >
-                {r.category && <span className="text-xs text-blue-600">{r.category}</span>}
-                <p className="text-sm font-medium text-gray-800 dark:text-gray-200 mt-1">{r.title}</p>
+                <div className="text-sm font-medium text-gray-900 dark:text-gray-100">{r.title}</div>
+                {r.excerpt && <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">{r.excerpt}</div>}
               </Link>
             ))}
           </div>
         </section>
       )}
 
-      <div className="text-center mt-12">
-        <button onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-          className="text-sm text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:text-gray-400 dark:text-gray-500 transition-colors"
-        >↑ 返回顶部</button>
+      <MobileToc content={processedContent} />
+
+      <div className="hidden lg:block">
+        <TocSidebar content={processedContent} />
       </div>
     </article>
   );
